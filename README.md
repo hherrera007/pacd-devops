@@ -1,58 +1,187 @@
+# Welcome to PACD Stack
 
-# Welcome to your CDK Python project!
+This repository contains the AWS CDK Python project for the PACD stack.
 
-This is a blank project for CDK development with Python.
+## Prerequisites
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+- Python 3.10 or later
+- Node.js and npm
+- AWS CDK Toolkit
+- AWS CLI version 2
+- Access to an AWS account
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+Install the AWS CDK Toolkit if it is not already available:
 
-To manually create a virtualenv on MacOS and Linux:
-
-```
-$ python -m venv .venv
-```
-
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
-
-```
-$ source .venv/bin/activate
+```bash
+npm install -g aws-cdk
+cdk --version
 ```
 
-If you are a Windows platform, you would activate the virtualenv like this:
+## Install the AWS CLI
 
-```
-% .venv\Scripts\activate.bat
-```
+Install AWS CLI version 2 for your operating system.
 
-Once the virtualenv is activated, you can install the required dependencies.
+### Windows
 
-```
-$ pip install -r requirements.txt
-```
+Download and run the official Windows MSI installer:
 
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ cdk synth
+```text
+https://awscli.amazonaws.com/AWSCLIV2.msi
 ```
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
+Then open a new terminal and verify the installation:
 
-## Useful commands
+```powershell
+aws --version
+```
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+### macOS
 
-Enjoy!
+Download and run the official macOS package:
+
+```text
+https://awscli.amazonaws.com/AWSCLIV2.pkg
+```
+
+Then verify the installation:
+
+```bash
+aws --version
+```
+
+### Linux
+
+Use the official AWS CLI installer:
+
+```bash
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+```
+
+For ARM-based Linux systems, use:
+
+```bash
+curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+```
+
+## Create a New AWS Account
+
+To create a new AWS account:
+
+1. Go to the AWS account creation page: <https://aws.amazon.com/resources/create-account/>
+2. Enter the root user email address and AWS account name.
+3. Verify the email address.
+4. Create the root user password.
+5. Add contact information.
+6. Add a payment method.
+7. Verify your phone number.
+8. Choose an AWS Support plan.
+9. Wait for account activation. AWS usually activates accounts within a few minutes, but it can take up to 24 hours.
+
+After the account is active, enable MFA for the root user and avoid using the root user for day-to-day work.
+
+## Configure an AWS SSO Profile
+
+Use AWS IAM Identity Center credentials with a named CLI profile.
+
+Replace `<MY_PROFILE>` with the profile name you want to use, for example `personal`:
+
+```bash
+aws configure sso --profile <MY_PROFILE>
+```
+
+The wizard will ask for values such as:
+
+- SSO session name
+- SSO start URL or issuer URL
+- SSO region
+- AWS account
+- Permission set or role
+- Default client region
+- Default output format
+
+When the browser opens, complete the AWS sign-in flow. If the browser does not open automatically, follow the URL and code shown in the terminal.
+
+## Access Your AWS Profile
+
+Sign in to the SSO profile:
+
+```bash
+aws sso login --profile <MY_PROFILE>
+```
+
+Confirm which AWS identity is active:
+
+```bash
+aws sts get-caller-identity --profile <MY_PROFILE>
+```
+
+Run AWS CLI commands with that profile:
+
+```bash
+aws s3 ls --profile <MY_PROFILE>
+aws cloudformation list-stacks --profile <MY_PROFILE>
+```
+
+When you are done, you can sign out from cached SSO sessions:
+
+```bash
+aws sso logout
+```
+
+## Set Up the Project
+
+Create and activate a Python virtual environment.
+
+On macOS and Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+Install the project dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Bootstrap the Stack for the First Time
+
+Before deploying a CDK stack into a new AWS account and region, bootstrap the AWS environment.
+
+For the `personal` profile, run:
+
+```bash
+cdk bootstrap --profile personal
+```
+
+If you used a different profile name, replace `personal` with your profile:
+
+```bash
+cdk bootstrap --profile <MY_PROFILE>
+```
+
+## Useful CDK Commands
+
+```bash
+cdk ls --profile <MY_PROFILE>
+cdk synth --profile <MY_PROFILE>
+cdk diff --profile <MY_PROFILE>
+cdk deploy --profile <MY_PROFILE>
+cdk destroy --profile <MY_PROFILE>
+```
+
+Use `cdk synth` to generate and inspect the CloudFormation template before deploying changes.
