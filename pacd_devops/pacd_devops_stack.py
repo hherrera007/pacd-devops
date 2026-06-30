@@ -8,6 +8,7 @@ from constructs import Construct
 from pacd_devops.alarms.monthly_budget_alarm import MonthlyBudgetAlarm
 from pacd_devops.constants import TAG_KEYS, MODULES
 from pacd_devops.networking.pacd_vpc import PacdVpc
+from pacd_devops.storage.pacd_files_bucket import PacdFilesBucket
 
 
 class PacdDevopsStack(Stack):
@@ -20,3 +21,10 @@ class PacdDevopsStack(Stack):
 
         pacd_vpc = PacdVpc(self, "PacdVpc")
         Tags.of(pacd_vpc).add(TAG_KEYS.MODULE, MODULES.NETWORKING)
+
+        files_bucket = PacdFilesBucket(
+            self,
+            "PacdFilesBucket",
+            bucket_name="files.pacd.edu",
+        )
+        Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)

@@ -189,14 +189,6 @@ Use `cdk synth` to generate and inspect the CloudFormation template before deplo
 ## Cost References
 
 - VPC cost notes: [docs/vpc-costs.md](docs/vpc-costs.md)
+- S3 cost notes: [docs/s3-costs.md](docs/s3-costs.md)
 - AWS VPC pricing: <https://aws.amazon.com/vpc/pricing/>
-
-Current VPC configuration:
-
-```text
-CIDR: 10.1.0.0/16
-NAT Gateways: 0
-Expected direct VPC cost: $0
-```
-
-Public IPv4 addresses and NAT Gateways can add cost when resources are created later.
+- AWS S3 pricing: <https://aws.amazon.com/s3/pricing/>
