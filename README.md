@@ -185,3 +185,18 @@ cdk destroy --profile <MY_PROFILE>
 ```
 
 Use `cdk synth` to generate and inspect the CloudFormation template before deploying changes.
+
+## Cost References
+
+- VPC cost notes: [docs/vpc-costs.md](docs/vpc-costs.md)
+- AWS VPC pricing: <https://aws.amazon.com/vpc/pricing/>
+
+Current VPC configuration:
+
+```text
+CIDR: 10.1.0.0/16
+NAT Gateways: 0
+Expected direct VPC cost: $0
+```
+
+Public IPv4 addresses and NAT Gateways can add cost when resources are created later.

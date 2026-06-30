@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import Tags, aws_budgets as budgets
+from aws_cdk import aws_budgets as budgets
 from constructs import Construct
 
 class MonthlyBudgetAlarm(Construct):
@@ -43,4 +43,3 @@ class MonthlyBudgetAlarm(Construct):
                 )
             ],
         )
-
