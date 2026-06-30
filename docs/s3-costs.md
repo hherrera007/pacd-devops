@@ -50,6 +50,19 @@ Examples:
 100 GB stored for 1 month: about $2.30
 ```
 
+## CDK Bootstrap Bucket Example
+
+If the CDK bootstrap bucket stores `49.5 KB`, the S3 Standard storage cost is effectively zero.
+
+Approximate calculation:
+
+```text
+49.5 KB / 1,048,576 KB per GB = 0.00004721 GB
+0.00004721 GB x $0.023 per GB-month = $0.00000109 per month
+```
+
+That is about `$0.000013` per year for storage, before any request or data transfer charges. Normal CDK bootstrap usage may create a small number of S3 requests, but at this size the storage cost is negligible.
+
 ## Deletion Behavior
 
 The bucket intentionally does not use a retain policy.
