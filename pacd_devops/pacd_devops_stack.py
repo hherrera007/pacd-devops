@@ -5,7 +5,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from pacd_devops.alarms import MonthlyBudgetAlarm
+from pacd_devops.alarms.monthly_budget_alarm import MonthlyBudgetAlarm
 from pacd_devops.constants import TAG_KEYS, MODULES
 
 
@@ -16,4 +16,3 @@ class PacdDevopsStack(Stack):
 
         monthly_budget = MonthlyBudgetAlarm(self, "MonthlyBudgetAlarm")
         Tags.of(monthly_budget).add(TAG_KEYS.MODULE, MODULES.BILLING)
-
