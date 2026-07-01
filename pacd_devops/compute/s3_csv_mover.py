@@ -36,7 +36,7 @@ class S3CsvMover(Construct):
         self.function = lambda_.Function(
             self,
             "S3CsvMoverFunction",
-            function_name="pacd-s3-csv-mover",
+            function_name="s3-csv-mover",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
             code=lambda_.Code.from_asset("lambda_functions/s3_csv_mover"),
