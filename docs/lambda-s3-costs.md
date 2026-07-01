@@ -1,22 +1,42 @@
 # Lambda S3 CSV Mover Cost Notes
 
-This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `inbound/` prefix of the `files.pacd.edu` S3 bucket.
+This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `incoming/` prefix of the `files.pacd.edu` S3 bucket.
 
 ## Current Behavior
 
 When an object like this is created:
 
 ```text
-inbound/example.csv
+incoming/example.csv
 ```
 
-The Lambda copies it to:
+The Lambda validates each row, inserts valid rows into PostgreSQL, and writes only invalid rows to:
 
 ```text
 outbound/example.csv
 ```
 
-Then it deletes the original `inbound/` object.
+If all rows are valid, no file is created in `outbound/`.
+
+## CSV Requirements
+
+The incoming CSV must use this header:
+
+```text
+fecha,producto,categoria,cantidad,precio_unitario,cliente
+```
+
+The Lambda validates each row before inserting it into the `ventas` table:
+
+- trims leading and trailing spaces from text fields
+- rejects empty `producto`
+- rejects empty `categoria`
+- rejects empty `cliente`
+- rejects `cantidad` values less than or equal to `0`
+- rejects `precio_unitario` values less than or equal to `0`
+- calculates `total` as `cantidad x precio_unitario`
+
+Invalid rows are written to `outbound/` with all original columns plus `error_message`.
 
 ## Cost Drivers
 
@@ -31,7 +51,7 @@ The function uses:
 ```text
 Memory: 128 MB
 Timeout: 30 seconds
-Trigger: S3 object-created event for inbound/*.csv
+Trigger: S3 object-created event for incoming/*.csv
 ```
 
 AWS Lambda pricing includes one million requests and 400,000 GB-seconds per month in the free tier. On pay as you go, small demo usage should usually be very low cost.
@@ -75,6 +95,8 @@ The log group existing by itself has no meaningful cost. CloudWatch Logs cost co
 - log data stored
 - log data scanned by Logs Insights queries
 
+This Lambda sets log retention to `1 day`, so old logs are automatically deleted quickly.
+
 Common `us-east-1` reference prices:
 
 ```text
@@ -93,15 +115,19 @@ Storage: 0.001 GB x $0.03 = $0.00003 per month
 
 So for this demo Lambda, CloudWatch Logs should usually be `$0` or near `$0`, unless the function logs heavily or logs are queried frequently.
 
-S3 also charges for the copy and delete operations:
+S3 also charges for object reads and writes:
 
-- copy uses a PUT/COPY request
-- delete requests are free
+- reading the incoming CSV uses a GET request
+- writing invalid records to outbound/ uses a PUT request
 - storage cost depends on the size and lifetime of the files
 
 ## Security and Access
 
-The Lambda receives read/write permissions only for the S3 bucket. It is not placed inside the VPC and does not need database access.
+The Lambda receives read/write permissions for the S3 bucket. It is placed inside the VPC and has its own security group.
+
+The PostgreSQL security group allows inbound port `5432` only from the Lambda security group. The Lambda receives the RDS endpoint from the CDK database construct, so `DATABASE_HOST` is not stored in `.env`.
+
+The VPC includes an S3 Gateway Endpoint so the private Lambda can reach S3 without a NAT Gateway.
 
 Pricing references:
 

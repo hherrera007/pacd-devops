@@ -34,14 +34,6 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
-        # Moves CSV files from inbound/ to outbound/ inside the S3 bucket.
-        csv_mover = S3CsvMover(
-            self,
-            "S3CsvMover",
-            bucket=files_bucket.bucket,
-        )
-        Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
-
         # Small database for demos.
         postgres_database = PacdPostgresDatabase(
             self,
@@ -49,3 +41,14 @@ class PacdDevopsStack(Stack):
             vpc=pacd_vpc.vpc,
         )
         Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
+
+        # Moves valid CSV rows into Postgres and writes invalid rows to S3.
+        csv_mover = S3CsvMover(
+            self,
+            "S3CsvMover",
+            bucket=files_bucket.bucket,
+            database=postgres_database.database,
+            vpc=pacd_vpc.vpc,
+        )
+        postgres_database.allow_connections_from(csv_mover.security_group)
+        Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)

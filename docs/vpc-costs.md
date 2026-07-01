@@ -11,6 +11,7 @@ The CDK VPC construct creates networking resources such as:
 - private isolated subnets
 - route tables
 - internet gateway
+- S3 Gateway Endpoint
 - subnet route table associations
 
 These resources do not have a direct hourly charge by themselves.

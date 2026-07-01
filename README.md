@@ -186,6 +186,10 @@ cdk destroy --profile <MY_PROFILE>
 
 Use `cdk synth` to generate and inspect the CloudFormation template before deploying changes.
 
+## Example Data
+
+- Example ventas table: [docs/example-ventas-table.md](docs/example-ventas-table.md)
+
 ## Cost References
 
 - VPC cost notes: [docs/vpc-costs.md](docs/vpc-costs.md)

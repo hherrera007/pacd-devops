@@ -38,3 +38,9 @@ class PacdVpc(Construct):
                 ),
             ],
         )
+
+        # Lets private Lambda functions reach S3 without a NAT Gateway.
+        self.vpc.add_gateway_endpoint(
+            "S3GatewayEndpoint",
+            service=ec2.GatewayVpcEndpointAwsService.S3,
+        )

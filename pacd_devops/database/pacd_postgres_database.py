@@ -29,7 +29,7 @@ class PacdPostgresDatabase(Construct):
                 username=os.getenv("DATABASE_USERNAME"),
                 password=SecretValue.unsafe_plain_text(os.getenv("DATABASE_PASSWORD")),
             ),
-            database_name="pacd",
+            database_name=os.getenv("DATABASE_NAME", "pacd"),
             vpc=vpc,
             # Public subnet placement keeps laptop access simple for demos.
             vpc_subnets=ec2.SubnetSelection(
@@ -50,4 +50,12 @@ class PacdPostgresDatabase(Construct):
             deletion_protection=False,
             # Allows stack deletion to remove the demo database.
             removal_policy=RemovalPolicy.DESTROY,
+        )
+
+    def allow_connections_from(self, peer: ec2.ISecurityGroup) -> None:
+        # Allows only the provided security group to connect to PostgreSQL.
+        self.security_group.add_ingress_rule(
+            peer=peer,
+            connection=ec2.Port.tcp(5432),
+            description="Allow PostgreSQL access from the CSV loader Lambda.",
         )

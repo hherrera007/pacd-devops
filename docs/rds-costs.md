@@ -21,9 +21,9 @@ The database is configured with:
 
 CDK can create a security group automatically for an RDS instance, but this stack creates one explicitly.
 
-The database security group currently has no inbound PostgreSQL rule. That means the database can exist in public subnets without allowing internet traffic to port `5432` by default.
+The database security group allows inbound PostgreSQL traffic on port `5432` only from the CSV loader Lambda security group.
 
-Add an ingress rule later only from the application security group or a trusted IP range.
+Do not add public `0.0.0.0/0` database access unless this is strictly needed for a temporary demo.
 
 ## Expected Cost
 
