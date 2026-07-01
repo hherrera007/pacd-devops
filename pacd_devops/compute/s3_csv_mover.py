@@ -48,7 +48,7 @@ class S3CsvMover(Construct):
             security_groups=[self.security_group],
             environment={
                 "BUCKET_NAME": bucket.bucket_name,
-                "INBOUND_PREFIX": "incoming/",
+                "INBOUND_PREFIX": "inbound/",
                 "OUTBOUND_PREFIX": "outbound/",
                 "DATABASE_HOST": database.db_instance_endpoint_address,
                 "DATABASE_PORT": database.db_instance_endpoint_port,
@@ -60,9 +60,9 @@ class S3CsvMover(Construct):
 
         # Allows the Lambda to read CSV files and write invalid-record reports.
         bucket.grant_read_write(self.function)
-        # Triggers only for new CSV files under incoming/.
+        # Triggers only for new CSV files under inbound/.
         bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(self.function),
-            s3.NotificationKeyFilter(prefix="incoming/", suffix=".csv"),
+            s3.NotificationKeyFilter(prefix="inbound/", suffix=".csv"),
         )

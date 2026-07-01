@@ -1,13 +1,13 @@
 # Lambda S3 CSV Mover Cost Notes
 
-This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `incoming/` prefix of the `files.pacd.edu` S3 bucket.
+This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `inbound/` prefix of the `files.pacd.edu` S3 bucket.
 
 ## Current Behavior
 
 When an object like this is created:
 
 ```text
-incoming/example.csv
+inbound/example.csv
 ```
 
 The Lambda validates each row, inserts valid rows into PostgreSQL, and writes only invalid rows to:
@@ -20,7 +20,7 @@ If all rows are valid, no file is created in `outbound/`.
 
 ## CSV Requirements
 
-The incoming CSV must use this header:
+The inbound CSV must use this header:
 
 ```text
 fecha,producto,categoria,cantidad,precio_unitario,cliente
@@ -51,7 +51,7 @@ The function uses:
 ```text
 Memory: 128 MB
 Timeout: 30 seconds
-Trigger: S3 object-created event for incoming/*.csv
+Trigger: S3 object-created event for inbound/*.csv
 ```
 
 AWS Lambda pricing includes one million requests and 400,000 GB-seconds per month in the free tier. On pay as you go, small demo usage should usually be very low cost.
@@ -117,7 +117,7 @@ So for this demo Lambda, CloudWatch Logs should usually be `$0` or near `$0`, un
 
 S3 also charges for object reads and writes:
 
-- reading the incoming CSV uses a GET request
+- reading the inbound CSV uses a GET request
 - writing invalid records to outbound/ uses a PUT request
 - storage cost depends on the size and lifetime of the files
 
