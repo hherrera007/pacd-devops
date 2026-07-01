@@ -190,5 +190,10 @@ Use `cdk synth` to generate and inspect the CloudFormation template before deplo
 
 - VPC cost notes: [docs/vpc-costs.md](docs/vpc-costs.md)
 - S3 cost notes: [docs/s3-costs.md](docs/s3-costs.md)
+- Lambda S3 CSV mover cost notes: [docs/lambda-s3-costs.md](docs/lambda-s3-costs.md)
+- RDS PostgreSQL cost notes: [docs/rds-costs.md](docs/rds-costs.md)
+- Security groups cost notes: [docs/security-groups-costs.md](docs/security-groups-costs.md)
 - AWS VPC pricing: <https://aws.amazon.com/vpc/pricing/>
 - AWS S3 pricing: <https://aws.amazon.com/s3/pricing/>
+- AWS Lambda pricing: <https://aws.amazon.com/lambda/pricing/>
+- AWS RDS for PostgreSQL pricing: <https://aws.amazon.com/rds/postgresql/pricing/>

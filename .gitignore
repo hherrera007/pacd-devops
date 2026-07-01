@@ -8,3 +8,7 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+/cdk.context.json
+/synth-check/PacdDevopsStack.template.json
+/hherrera007
+/hherrera007.pub

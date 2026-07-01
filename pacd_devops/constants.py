@@ -5,6 +5,7 @@ class TAG_KEYS:
 
 class MODULES:
     BILLING = "billing"
+    DATABASE = "database"
     DEV_TOOLS = "dev_tools"
     NETWORKING = "networking"
     STORAGE = "storage"
@@ -15,5 +16,4 @@ class MODULES:
 class TAG_VALUES:
     PROJECT = "pacd"
     ENVIRONMENT = "personal"
-
 

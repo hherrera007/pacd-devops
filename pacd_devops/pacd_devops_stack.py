@@ -6,7 +6,9 @@ from aws_cdk import (
 from constructs import Construct
 
 from pacd_devops.alarms.monthly_budget_alarm import MonthlyBudgetAlarm
+from pacd_devops.compute.s3_csv_mover import S3CsvMover
 from pacd_devops.constants import TAG_KEYS, MODULES
+from pacd_devops.database.pacd_postgres_database import PacdPostgresDatabase
 from pacd_devops.networking.pacd_vpc import PacdVpc
 from pacd_devops.storage.pacd_files_bucket import PacdFilesBucket
 
@@ -28,3 +30,17 @@ class PacdDevopsStack(Stack):
             bucket_name="files.pacd.edu",
         )
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
+
+        csv_mover = S3CsvMover(
+            self,
+            "S3CsvMover",
+            bucket=files_bucket.bucket,
+        )
+        Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        postgres_database = PacdPostgresDatabase(
+            self,
+            "PacdPostgresDatabase",
+            vpc=pacd_vpc.vpc,
+        )
+        Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
