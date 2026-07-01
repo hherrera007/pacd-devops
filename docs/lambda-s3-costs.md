@@ -18,7 +18,7 @@ outbound/example.csv
 
 If all rows are valid, no file is created in `outbound/`.
 
-Database insertion is currently disabled while troubleshooting Lambda errors.
+Valid records are inserted into the PostgreSQL `ventas` table. The Lambda package includes `pg8000`, installed during CDK asset bundling with Docker.
 
 ## CSV Requirements
 

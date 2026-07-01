@@ -8,6 +8,7 @@ This repository contains the AWS CDK Python project for the PACD stack.
 - Node.js and npm
 - AWS CDK Toolkit
 - AWS CLI version 2
+- Docker Desktop or Docker Engine
 - Access to an AWS account
 
 Install the AWS CDK Toolkit if it is not already available:
@@ -16,6 +17,8 @@ Install the AWS CDK Toolkit if it is not already available:
 npm install -g aws-cdk
 cdk --version
 ```
+
+Docker must be running before CDK commands that build Lambda assets. This stack uses Docker to package the `pg8000` PostgreSQL dependency into the S3 CSV mover Lambda.
 
 ## Install the AWS CLI
 

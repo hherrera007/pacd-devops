@@ -6,6 +6,7 @@ from io import StringIO
 from urllib.parse import unquote_plus
 
 import boto3
+import pg8000.dbapi
 
 
 s3_client = boto3.client("s3")
@@ -49,24 +50,31 @@ def process_csv_file(bucket_name, source_key):
     reader = csv.DictReader(StringIO(csv_content))
     invalid_rows = []
     valid_count = 0
+    connection = None
 
     header_error = validate_header(reader.fieldnames)
 
-    for row in reader:
-        clean_row = clean_text_fields(row)
+    try:
+        for row in reader:
+            clean_row = clean_text_fields(row)
 
-        if header_error:
-            invalid_rows.append(add_error(clean_row, header_error))
-            continue
+            if header_error:
+                invalid_rows.append(add_error(clean_row, header_error))
+                continue
 
-        errors, _parsed_row = validate_row(clean_row)
-        if errors:
-            invalid_rows.append(add_error(clean_row, "; ".join(errors)))
-            continue
+            errors, parsed_row = validate_row(clean_row)
+            if errors:
+                invalid_rows.append(add_error(clean_row, "; ".join(errors)))
+                continue
 
-        # Database insert disabled while troubleshooting Lambda errors.
-        # insert_sale(connection, parsed_row, clean_row)
-        valid_count += 1
+            if connection is None:
+                connection = open_database_connection()
+
+            insert_sale(connection, parsed_row)
+            valid_count += 1
+    finally:
+        if connection:
+            connection.close()
 
     if invalid_rows:
         write_invalid_rows(bucket_name, source_key, invalid_rows)
@@ -140,8 +148,55 @@ def validate_row(row):
     if errors:
         return errors, parsed_row
 
+    parsed_row["fecha"] = date.fromisoformat(row["fecha"])
+    parsed_row["producto"] = row["producto"]
+    parsed_row["categoria"] = row["categoria"]
+    parsed_row["cliente"] = row["cliente"]
     parsed_row["total"] = parsed_row["cantidad"] * parsed_row["precio_unitario"]
     return errors, parsed_row
+
+
+def open_database_connection():
+    return pg8000.dbapi.connect(
+        host=os.environ["DATABASE_HOST"],
+        port=int(os.environ["DATABASE_PORT"]),
+        database=os.environ["DATABASE_NAME"],
+        user=os.environ["DATABASE_USERNAME"],
+        password=os.environ["DATABASE_PASSWORD"],
+    )
+
+
+def insert_sale(connection, row):
+    # Commit each valid CSV row independently.
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO ventas (
+                fecha,
+                producto,
+                categoria,
+                cantidad,
+                precio_unitario,
+                cliente,
+                total
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                row["fecha"],
+                row["producto"],
+                row["categoria"],
+                row["cantidad"],
+                row["precio_unitario"],
+                row["cliente"],
+                row["total"],
+            ),
+        )
+    finally:
+        cursor.close()
+
+    connection.commit()
 
 
 def parse_positive_integer(value):
