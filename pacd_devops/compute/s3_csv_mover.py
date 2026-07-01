@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import BundlingOptions, Duration, aws_ec2 as ec2, aws_lambda as lambda_, aws_logs as logs, aws_rds as rds, aws_s3 as s3, aws_s3_notifications as s3n
+from aws_cdk import Duration, RemovalPolicy, aws_ec2 as ec2, aws_lambda as lambda_, aws_logs as logs, aws_rds as rds, aws_s3 as s3, aws_s3_notifications as s3n
 from constructs import Construct
 
 
@@ -23,27 +23,24 @@ class S3CsvMover(Construct):
             description="Security group for the CSV loader Lambda.",
         )
 
+        log_group = logs.LogGroup(
+            self,
+            "S3CsvMoverLogGroup",
+            # Deletes Lambda logs after one day to avoid log buildup.
+            retention=logs.RetentionDays.ONE_DAY,
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+
         # Lambda that validates incoming CSV files and loads valid rows into Postgres.
         self.function = lambda_.Function(
             self,
             "S3CsvMoverFunction",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
-            code=lambda_.Code.from_asset(
-                "lambda_functions/s3_csv_mover",
-                bundling=BundlingOptions(
-                    image=lambda_.Runtime.PYTHON_3_12.bundling_image,
-                    command=[
-                        "bash",
-                        "-c",
-                        "pip install -r requirements.txt -t /asset-output && cp app.py /asset-output",
-                    ],
-                ),
-            ),
+            code=lambda_.Code.from_asset("lambda_functions/s3_csv_mover"),
             timeout=Duration.seconds(30),
             memory_size=128,
-            # Deletes Lambda logs after one day to avoid log buildup.
-            log_retention=logs.RetentionDays.ONE_DAY,
+            log_group=log_group,
             vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,

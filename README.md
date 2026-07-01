@@ -158,6 +158,14 @@ Install the project dependencies:
 pip install -r requirements.txt
 ```
 
+Install the Lambda dependencies into the Lambda source folder before packaging the stack:
+
+```bash
+pip install -r lambda_functions/s3_csv_mover/requirements.txt -t lambda_functions/s3_csv_mover
+```
+
+This keeps CDK from using Docker to bundle the Lambda package.
+
 ## Bootstrap the Stack for the First Time
 
 Before deploying a CDK stack into a new AWS account and region, bootstrap the AWS environment.
