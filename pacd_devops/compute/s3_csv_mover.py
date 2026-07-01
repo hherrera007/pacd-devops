@@ -1,6 +1,4 @@
-import os
-
-from aws_cdk import Duration, RemovalPolicy, aws_ec2 as ec2, aws_lambda as lambda_, aws_logs as logs, aws_rds as rds, aws_s3 as s3, aws_s3_notifications as s3n
+from aws_cdk import Duration, RemovalPolicy, aws_lambda as lambda_, aws_logs as logs, aws_s3 as s3, aws_s3_notifications as s3n
 from constructs import Construct
 
 
@@ -10,18 +8,8 @@ class S3CsvMover(Construct):
         scope: Construct,
         construct_id: str,
         bucket: s3.IBucket,
-        database: rds.IDatabaseInstance,
-        vpc: ec2.IVpc,
     ) -> None:
         super().__init__(scope, construct_id)
-
-        self.security_group = ec2.SecurityGroup(
-            self,
-            "S3CsvMoverSecurityGroup",
-            vpc=vpc,
-            allow_all_outbound=True,
-            description="Security group for the CSV loader Lambda.",
-        )
 
         log_group = logs.LogGroup(
             self,
@@ -41,20 +29,10 @@ class S3CsvMover(Construct):
             timeout=Duration.seconds(30),
             memory_size=128,
             log_group=log_group,
-            vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(
-                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
-            ),
-            security_groups=[self.security_group],
             environment={
                 "BUCKET_NAME": bucket.bucket_name,
                 "INBOUND_PREFIX": "inbound/",
                 "OUTBOUND_PREFIX": "outbound/",
-                "DATABASE_HOST": database.db_instance_endpoint_address,
-                "DATABASE_PORT": database.db_instance_endpoint_port,
-                "DATABASE_NAME": os.getenv("DATABASE_NAME", "pacd"),
-                "DATABASE_USERNAME": os.getenv("DATABASE_USERNAME", ""),
-                "DATABASE_PASSWORD": os.getenv("DATABASE_PASSWORD", ""),
             },
         )
 

@@ -10,13 +10,15 @@ When an object like this is created:
 inbound/example.csv
 ```
 
-The Lambda validates each row, inserts valid rows into PostgreSQL, and writes only invalid rows to:
+The Lambda validates each row and writes only invalid rows to:
 
 ```text
 outbound/example.csv
 ```
 
 If all rows are valid, no file is created in `outbound/`.
+
+Database insertion is currently disabled while troubleshooting Lambda errors.
 
 ## CSV Requirements
 
@@ -26,7 +28,7 @@ The inbound CSV must use this header:
 fecha,producto,categoria,cantidad,precio_unitario,cliente
 ```
 
-The Lambda validates each row before inserting it into the `ventas` table:
+The Lambda validates each row against the `ventas` table shape:
 
 - trims leading and trailing spaces from text fields
 - rejects empty `producto`
@@ -123,11 +125,7 @@ S3 also charges for object reads and writes:
 
 ## Security and Access
 
-The Lambda receives read/write permissions for the S3 bucket. It is placed inside the VPC and has its own security group.
-
-The PostgreSQL security group allows inbound port `5432` only from the Lambda security group. The Lambda receives the RDS endpoint from the CDK database construct, so `DATABASE_HOST` is not stored in `.env`.
-
-The VPC includes an S3 Gateway Endpoint so the private Lambda can reach S3 without a NAT Gateway.
+The Lambda receives read/write permissions for the S3 bucket. It is not placed inside the VPC while database insertion is disabled.
 
 Pricing references:
 

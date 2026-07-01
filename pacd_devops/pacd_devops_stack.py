@@ -47,8 +47,5 @@ class PacdDevopsStack(Stack):
             self,
             "S3CsvMover",
             bucket=files_bucket.bucket,
-            database=postgres_database.database,
-            vpc=pacd_vpc.vpc,
         )
-        postgres_database.allow_connections_from(csv_mover.security_group)
         Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
