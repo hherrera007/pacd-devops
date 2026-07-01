@@ -26,15 +26,17 @@ class S3CsvMover(Construct):
         log_group = logs.LogGroup(
             self,
             "S3CsvMoverLogGroup",
+            log_group_name="/aws/lambda/pacd-s3-csv-mover",
             # Deletes Lambda logs after one day to avoid log buildup.
             retention=logs.RetentionDays.ONE_DAY,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # Lambda that validates incoming CSV files and loads valid rows into Postgres.
+        # Lambda that validates incoming CSV files; DB insert is disabled for troubleshooting.
         self.function = lambda_.Function(
             self,
             "S3CsvMoverFunction",
+            function_name="pacd-s3-csv-mover",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
             code=lambda_.Code.from_asset("lambda_functions/s3_csv_mover"),

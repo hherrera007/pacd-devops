@@ -125,7 +125,7 @@ S3 also charges for object reads and writes:
 
 ## Security and Access
 
-The Lambda receives read/write permissions for the S3 bucket. It is not placed inside the VPC while database insertion is disabled.
+The Lambda receives read/write permissions for the S3 bucket. It is still placed inside the VPC private isolated subnets, so S3 access uses the VPC S3 Gateway Endpoint.
 
 Pricing references:
 

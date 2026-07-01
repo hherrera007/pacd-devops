@@ -23,16 +23,20 @@ EXPECTED_HEADERS = [
 def handler(event, _context):
     bucket_name = os.environ["BUCKET_NAME"]
     incoming_prefix = os.environ["INBOUND_PREFIX"]
+    print(f"Received {len(event.get('Records', []))} S3 record(s).")
 
     # S3 can send multiple object records in one event.
     for record in event["Records"]:
         source_bucket = record["s3"]["bucket"]["name"]
         source_key = unquote_plus(record["s3"]["object"]["key"])
+        print(f"Processing s3://{source_bucket}/{source_key}")
 
         if source_bucket != bucket_name:
+            print(f"Skipped bucket {source_bucket}; expected {bucket_name}.")
             continue
 
         if not source_key.startswith(incoming_prefix) or not source_key.endswith(".csv"):
+            print(f"Skipped key {source_key}; expected {incoming_prefix}*.csv.")
             continue
 
         process_csv_file(bucket_name, source_key)
@@ -44,6 +48,7 @@ def process_csv_file(bucket_name, source_key):
     csv_content = read_s3_text(bucket_name, source_key)
     reader = csv.DictReader(StringIO(csv_content))
     invalid_rows = []
+    valid_count = 0
 
     header_error = validate_header(reader.fieldnames)
 
@@ -61,9 +66,12 @@ def process_csv_file(bucket_name, source_key):
 
         # Database insert disabled while troubleshooting Lambda errors.
         # insert_sale(connection, parsed_row, clean_row)
+        valid_count += 1
 
     if invalid_rows:
         write_invalid_rows(bucket_name, source_key, invalid_rows)
+
+    print(f"Finished {source_key}: valid={valid_count}, invalid={len(invalid_rows)}")
 
 
 def read_s3_text(bucket_name, source_key):

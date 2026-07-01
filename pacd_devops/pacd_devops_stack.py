@@ -42,7 +42,7 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
 
-        # Moves valid CSV rows into Postgres and writes invalid rows to S3.
+        # Validates CSV files and writes invalid rows to S3.
         csv_mover = S3CsvMover(
             self,
             "S3CsvMover",
