@@ -18,12 +18,15 @@ class PacdDevopsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Sends an email when monthly AWS cost approaches the budget limit.
         monthly_budget = MonthlyBudgetAlarm(self, "MonthlyBudgetAlarm")
         Tags.of(monthly_budget).add(TAG_KEYS.MODULE, MODULES.BILLING)
 
+        # Creates the low-cost network foundation for the stack.
         pacd_vpc = PacdVpc(self, "PacdVpc")
         Tags.of(pacd_vpc).add(TAG_KEYS.MODULE, MODULES.NETWORKING)
 
+        # Stores uploaded files used by the demo workflow.
         files_bucket = PacdFilesBucket(
             self,
             "PacdFilesBucket",
@@ -31,6 +34,7 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
+        # Moves CSV files from inbound/ to outbound/ inside the S3 bucket.
         csv_mover = S3CsvMover(
             self,
             "S3CsvMover",
@@ -38,6 +42,7 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
 
+        # Small database for demos.
         postgres_database = PacdPostgresDatabase(
             self,
             "PacdPostgresDatabase",
