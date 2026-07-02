@@ -1,6 +1,6 @@
 import os
 
-from aws_cdk import Duration, RemovalPolicy, aws_ec2 as ec2, aws_lambda as lambda_, aws_logs as logs, aws_rds as rds, aws_s3 as s3, aws_s3_notifications as s3n
+from aws_cdk import BundlingOptions, DockerImage, Duration, RemovalPolicy, aws_ec2 as ec2, aws_lambda as lambda_, aws_logs as logs, aws_rds as rds, aws_s3 as s3, aws_s3_notifications as s3n
 from constructs import Construct
 
 
@@ -32,14 +32,24 @@ class S3CsvMover(Construct):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # Lambda that validates incoming CSV files; DB insert is disabled for troubleshooting.
+        # Lambda that validates incoming CSV files and inserts valid rows into Postgres.
         self.function = lambda_.Function(
             self,
             "S3CsvMoverFunction",
             function_name="s3-csv-mover",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
-            code=lambda_.Code.from_asset("lambda_functions/s3_csv_mover"),
+            code=lambda_.Code.from_asset(
+                "lambda_functions/s3_csv_mover",
+                bundling=BundlingOptions(
+                    image=DockerImage.from_registry("python:3.12-slim"),
+                    command=[
+                        "bash",
+                        "-c",
+                        "pip install -r requirements.txt -t /asset-output && cp -r . /asset-output",
+                    ],
+                ),
+            ),
             timeout=Duration.seconds(30),
             memory_size=128,
             log_group=log_group,
