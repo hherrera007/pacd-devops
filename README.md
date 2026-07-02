@@ -211,6 +211,7 @@ This demo URL is public and does not use API Gateway or authentication.
 ## Example Data
 
 - Example ventas table: [docs/example-ventas-table.md](docs/example-ventas-table.md)
+- CSV upload HTML demo: [examples/csv-upload-demo/README.md](examples/csv-upload-demo/README.md)
 
 ## Cost References
 

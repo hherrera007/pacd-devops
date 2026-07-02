@@ -1,4 +1,4 @@
-from aws_cdk import Duration, RemovalPolicy, aws_lambda as lambda_, aws_logs as logs, aws_s3 as s3
+from aws_cdk import Duration, RemovalPolicy, aws_iam as iam, aws_lambda as lambda_, aws_logs as logs, aws_s3 as s3
 from constructs import Construct
 
 
@@ -48,4 +48,18 @@ class CsvUploadUrl(Construct):
                 allowed_origins=["*"],
                 allowed_headers=["content-type"],
             ),
+        )
+
+        # Public permissions required for unauthenticated Function URL calls.
+        self.function.add_permission(
+            "CsvUploadUrlInvokePermission",
+            principal=iam.AnyPrincipal(),
+            action="lambda:InvokeFunctionUrl",
+            function_url_auth_type=lambda_.FunctionUrlAuthType.NONE,
+        )
+
+        self.function.add_permission(
+            "CsvUploadFunctionInvokePermission",
+            principal=iam.AnyPrincipal(),
+            action="lambda:InvokeFunction",
         )

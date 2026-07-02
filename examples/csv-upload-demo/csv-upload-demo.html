@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carga de CSV PACD</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      max-width: 760px;
+      line-height: 1.5;
+      color: #1f2937;
+    }
+
+    label,
+    input,
+    button {
+      display: block;
+      margin-top: 12px;
+    }
+
+    input[type="file"] {
+      padding: 8px 0;
+    }
+
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    code,
+    pre {
+      background: #f3f4f6;
+      border-radius: 6px;
+      padding: 2px 5px;
+    }
+
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+    }
+
+    #status {
+      margin-top: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cargar archivo CSV</h1>
+
+  <p>
+    Selecciona un archivo <strong>CSV</strong>. El archivo debe usar columnas separadas por coma
+    y debe tener exactamente esta estructura:
+  </p>
+
+  <pre>fecha,producto,categoria,cantidad,precio_unitario,cliente</pre>
+
+  <p>Ejemplo de contenido válido:</p>
+
+  <pre>fecha,producto,categoria,cantidad,precio_unitario,cliente
+2026-07-01,Laptop,Tecnologia,1,1200.00,Juan Perez</pre>
+
+  <p>
+    Reglas principales: <code>fecha</code> debe usar formato <code>YYYY-MM-DD</code>,
+    <code>cantidad</code> debe ser mayor que cero, <code>precio_unitario</code> debe ser mayor que cero,
+    y <code>producto</code>, <code>categoria</code> y <code>cliente</code> no deben estar vacíos.
+  </p>
+
+  <form id="upload-form">
+    <label for="csv-file">Archivo CSV</label>
+    <input id="csv-file" type="file" accept=".csv,text/csv" required>
+    <button type="submit">Subir archivo</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    const lambdaUrl = "https://REPLACE_WITH_LAMBDA_FUNCTION_URL/";
+
+    document.getElementById("upload-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const status = document.getElementById("status");
+      const fileInput = document.getElementById("csv-file");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        status.textContent = "Selecciona un archivo CSV.";
+        return;
+      }
+
+      const uploadUrl = `${lambdaUrl}?filename=${encodeURIComponent(file.name)}`;
+      status.textContent = "Subiendo archivo...";
+
+      try {
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/csv",
+          },
+          body: file,
+        });
+
+        const message = await response.text();
+        status.textContent = response.ok ? `Carga exitosa: ${message}` : `Error: ${message}`;
+      } catch (error) {
+        status.textContent = `Error al subir el archivo: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

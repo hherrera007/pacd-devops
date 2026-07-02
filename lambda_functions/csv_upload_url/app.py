@@ -12,9 +12,11 @@ FILENAME_PATTERN = re.compile(r"[^A-Za-z0-9_.-]")
 
 
 def handler(event, _context):
+    # Accept only CSV uploads sent through POST.
     if event.get("requestContext", {}).get("http", {}).get("method") != "POST":
         return response(405, "Use POST to upload a CSV file.")
 
+    # Reject non-CSV requests early.
     content_type = get_header(event, "content-type")
     if "text/csv" not in content_type.lower():
         return response(400, "Content-Type must be text/csv.")
@@ -23,6 +25,7 @@ def handler(event, _context):
     if not body:
         return response(400, "CSV body is required.")
 
+    # Decode the Function URL body and store it under inbound/.
     file_body = decode_body(body, event.get("isBase64Encoded", False))
     filename = build_filename(event.get("queryStringParameters") or {})
     target_key = f"{os.environ['INBOUND_PREFIX']}{filename}"
@@ -38,6 +41,7 @@ def handler(event, _context):
 
 
 def get_header(event, header_name):
+    # Function URL headers can arrive with different casing.
     headers = event.get("headers") or {}
     for key, value in headers.items():
         if key.lower() == header_name:
@@ -52,6 +56,7 @@ def decode_body(body, is_base64_encoded):
 
 
 def build_filename(query_params):
+    # Keep only simple filename characters before writing to S3.
     requested_name = query_params.get("filename", "")
     safe_name = FILENAME_PATTERN.sub("-", requested_name).strip(".-")
 
