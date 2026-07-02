@@ -1,6 +1,5 @@
 import base64
 import os
-import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -8,7 +7,6 @@ import boto3
 
 
 s3_client = boto3.client("s3")
-FILENAME_PATTERN = re.compile(r"[^A-Za-z0-9_.-]")
 
 
 def handler(event, _context):
@@ -27,7 +25,7 @@ def handler(event, _context):
 
     # Decode the Function URL body and store it under inbound/.
     file_body = decode_body(body, event.get("isBase64Encoded", False))
-    filename = build_filename(event.get("queryStringParameters") or {})
+    filename = build_filename()
     target_key = f"{os.environ['INBOUND_PREFIX']}{filename}"
 
     s3_client.put_object(
@@ -55,15 +53,10 @@ def decode_body(body, is_base64_encoded):
     return body.encode("utf-8")
 
 
-def build_filename(query_params):
-    # Keep only simple filename characters before writing to S3.
-    requested_name = query_params.get("filename", "")
-    safe_name = FILENAME_PATTERN.sub("-", requested_name).strip(".-")
-
-    if safe_name and safe_name.endswith(".csv"):
-        return safe_name
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+def build_filename():
+    # Rename every upload to avoid collisions and unsafe names.
+    now = datetime.now(timezone.utc)
+    timestamp = now.strftime("%Y%m%dT%H%M%S") + f"{now.microsecond // 1000:03d}Z"
     return f"upload-{timestamp}-{uuid4().hex}.csv"
 
 

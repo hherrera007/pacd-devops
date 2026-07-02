@@ -50,6 +50,12 @@ The page sends the file to the Lambda Function URL. The Lambda stores the file i
 s3://files.pacd.edu/inbound/
 ```
 
+The Lambda renames every uploaded file using this pattern:
+
+```text
+upload-YYYYMMDDTHHMMSSmmmZ-<unique-id>.csv
+```
+
 After that, the S3 notification triggers the Lambda that processes the CSV.
 
 If you receive `Forbidden`, redeploy the stack to apply the public Lambda Function URL permissions.

@@ -91,11 +91,10 @@
         return;
       }
 
-      const uploadUrl = `${lambdaUrl}?filename=${encodeURIComponent(file.name)}`;
       status.textContent = "Subiendo archivo...";
 
       try {
-        const response = await fetch(uploadUrl, {
+        const response = await fetch(lambdaUrl, {
           method: "POST",
           headers: {
             "Content-Type": "text/csv",
