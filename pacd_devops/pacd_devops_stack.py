@@ -1,4 +1,5 @@
 from aws_cdk import (
+    CfnOutput,
     # Duration,
     Stack, Tags,
     # aws_sqs as sqs,
@@ -6,6 +7,7 @@ from aws_cdk import (
 from constructs import Construct
 
 from pacd_devops.alarms.monthly_budget_alarm import MonthlyBudgetAlarm
+from pacd_devops.compute.csv_upload_url import CsvUploadUrl
 from pacd_devops.compute.s3_csv_mover import S3CsvMover
 from pacd_devops.constants import TAG_KEYS, MODULES
 from pacd_devops.database.pacd_postgres_database import PacdPostgresDatabase
@@ -52,3 +54,18 @@ class PacdDevopsStack(Stack):
         )
         postgres_database.allow_connections_from(csv_mover.security_group)
         Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        # Public demo URL that uploads CSV files into S3 inbound/.
+        csv_upload_url = CsvUploadUrl(
+            self,
+            "CsvUploadUrl",
+            bucket=files_bucket.bucket,
+        )
+        Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        CfnOutput(
+            self,
+            "CsvUploadFunctionUrl",
+            value=csv_upload_url.function_url.url,
+            description="Public demo URL for uploading CSV files to S3 inbound/.",
+        )

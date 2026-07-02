@@ -2,6 +2,8 @@
 
 This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `inbound/` prefix of the `files.pacd.edu` S3 bucket.
 
+The stack also defines a public demo Lambda Function URL that accepts small CSV uploads and writes them to the same `inbound/` prefix. The URL is printed as the `CsvUploadFunctionUrl` CloudFormation output after deployment.
+
 ## Current Behavior
 
 When an object like this is created:

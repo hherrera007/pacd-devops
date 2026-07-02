@@ -189,6 +189,25 @@ cdk destroy --profile <MY_PROFILE>
 
 Use `cdk synth` to generate and inspect the CloudFormation template before deploying changes.
 
+## Upload a Demo CSV
+
+After deployment, CloudFormation prints the public Lambda Function URL as:
+
+```text
+CsvUploadFunctionUrl
+```
+
+Upload a small CSV file to the S3 `inbound/` prefix:
+
+```bash
+curl -X POST \
+  -H "Content-Type: text/csv" \
+  --data-binary @example.csv \
+  "<CsvUploadFunctionUrl>?filename=example.csv"
+```
+
+This demo URL is public and does not use API Gateway or authentication.
+
 ## Example Data
 
 - Example ventas table: [docs/example-ventas-table.md](docs/example-ventas-table.md)
