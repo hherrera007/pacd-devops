@@ -203,7 +203,7 @@ Upload a small CSV file to the S3 `inbound/` prefix:
 curl -X POST \
   -H "Content-Type: text/csv" \
   --data-binary @example.csv \
-  "<CsvUploadFunctionUrl>?filename=example.csv"
+  "<CsvUploadFunctionUrl>"
 ```
 
 This demo URL is public and does not use API Gateway or authentication.
