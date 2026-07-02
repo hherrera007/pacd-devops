@@ -19,6 +19,7 @@ class S3CsvMover(Construct):
             self,
             "S3CsvMoverSecurityGroup",
             vpc=vpc,
+            # Allows outbound traffic to S3 and PostgreSQL.
             allow_all_outbound=True,
             description="Security group for the CSV loader Lambda.",
         )
@@ -42,6 +43,7 @@ class S3CsvMover(Construct):
             code=lambda_.Code.from_asset(
                 "lambda_functions/s3_csv_mover",
                 bundling=BundlingOptions(
+                    # Docker image used to install pg8000 into the Lambda asset.
                     image=DockerImage.from_registry("python:3.12-slim"),
                     command=[
                         "bash",
@@ -53,8 +55,10 @@ class S3CsvMover(Construct):
             timeout=Duration.seconds(30),
             memory_size=128,
             log_group=log_group,
+            # Places the Lambda in the VPC so it can reach RDS.
             vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(
+                # No NAT is needed for RDS access inside the VPC.
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
             ),
             security_groups=[self.security_group],

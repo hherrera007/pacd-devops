@@ -66,6 +66,7 @@ class PacdDevopsStack(Stack):
         CfnOutput(
             self,
             "CsvUploadFunctionUrl",
+            # Prints the public upload URL after deployment.
             value=csv_upload_url.function_url.url,
             description="Public demo URL for uploading CSV files to S3 inbound/.",
         )

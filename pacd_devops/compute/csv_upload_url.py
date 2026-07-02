@@ -25,9 +25,11 @@ class CsvUploadUrl(Construct):
             self,
             "CsvUploadUrlFunction",
             function_name="csv-upload-url",
+            # Python runtime used by the upload handler.
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
             code=lambda_.Code.from_asset("lambda_functions/csv_upload_url"),
+            # Short timeout because this only writes small demo CSV files.
             timeout=Duration.seconds(10),
             memory_size=128,
             log_group=log_group,
@@ -44,6 +46,7 @@ class CsvUploadUrl(Construct):
         self.function_url = self.function.add_function_url(
             auth_type=lambda_.FunctionUrlAuthType.NONE,
             cors=lambda_.FunctionUrlCorsOptions(
+                # Browser demo only sends POST uploads.
                 allowed_methods=[lambda_.HttpMethod.POST],
                 allowed_origins=["*"],
                 allowed_headers=["content-type"],
@@ -61,5 +64,6 @@ class CsvUploadUrl(Construct):
         self.function.add_permission(
             "CsvUploadFunctionInvokePermission",
             principal=iam.AnyPrincipal(),
+            # Allows public invocation for this demo endpoint.
             action="lambda:InvokeFunction",
         )
