@@ -161,6 +161,30 @@ Install the project dependencies:
 pip install -r requirements.txt
 ```
 
+## Configure the `.env` File
+
+Create a `.env` file in the project root:
+
+```text
+AWS_ACCOUNT=<YOUR_AWS_ACCOUNT_ID>
+AWS_REGION=us-east-1
+BUDGET_ALERT_EMAIL=<YOUR_EMAIL>
+DATABASE_USERNAME=pacd_admin
+DATABASE_PASSWORD=<YOUR_DEMO_DATABASE_PASSWORD>
+DATABASE_PORT=5432
+DATABASE_NAME=pacd
+```
+
+Variable usage:
+
+- `AWS_ACCOUNT`: AWS account where the CDK stack is deployed.
+- `AWS_REGION`: AWS region for the stack, currently `us-east-1`.
+- `BUDGET_ALERT_EMAIL`: email that receives the monthly budget alert.
+- `DATABASE_USERNAME`: PostgreSQL demo user.
+- `DATABASE_PASSWORD`: PostgreSQL demo password.
+- `DATABASE_PORT`: PostgreSQL port, normally `5432`.
+- `DATABASE_NAME`: PostgreSQL database name, currently `pacd`.
+
 ## Bootstrap the Stack for the First Time
 
 Before deploying a CDK stack into a new AWS account and region, bootstrap the AWS environment.
