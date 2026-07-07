@@ -11,9 +11,9 @@ class MODULES:
     STORAGE = "storage"
     COMPUTE = "compute"
     SECURITY = "security"
+    STREAMING = "streaming"
 
 
 class TAG_VALUES:
     PROJECT = "pacd"
     ENVIRONMENT = "personal"
-

@@ -13,6 +13,7 @@ from pacd_devops.constants import TAG_KEYS, MODULES
 from pacd_devops.database.pacd_postgres_database import PacdPostgresDatabase
 from pacd_devops.networking.pacd_vpc import PacdVpc
 from pacd_devops.storage.pacd_files_bucket import PacdFilesBucket
+from pacd_devops.streaming.category_events_stream import CategoryEventsStream
 
 
 class PacdDevopsStack(Stack):
@@ -36,6 +37,7 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
+        """
         # Small database for demos.
         postgres_database = PacdPostgresDatabase(
             self,
@@ -61,14 +63,28 @@ class PacdDevopsStack(Stack):
             "CsvUploadUrl",
             bucket=files_bucket.bucket,
         )
-        Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+        Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)"""
 
+        # Streams category click events to S3 through Firehose.
+        category_events_stream = CategoryEventsStream(self, "CategoryEventsStream")
+        Tags.of(category_events_stream).add(TAG_KEYS.MODULE, MODULES.STREAMING)
+
+
+        """
         CfnOutput(
             self,
             "CsvUploadFunctionUrl",
             # Prints the public upload URL after deployment.
             value=csv_upload_url.function_url.url,
             description="Public demo URL for uploading CSV files to S3 inbound/.",
+        )"""
+
+        CfnOutput(
+            self,
+            "CategoryEventFunctionUrl",
+            # Prints the public category event URL after deployment.
+            value=category_events_stream.function_url.url,
+            description="Public demo URL for sending category click events to Firehose.",
         )
 
 

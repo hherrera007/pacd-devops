@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Categories</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #5d667a;
+      --line: #e5e8ef;
+      --accent: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 32px 24px 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    #choice-message {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .category-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+    }
+
+    .category-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #e5e7eb;
+      cursor: pointer;
+      transition: transform 180ms ease;
+    }
+
+    .category-card img:hover {
+      transform: scale(1.06);
+    }
+
+    .category-card div {
+      padding: 14px;
+    }
+
+    .category-card h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .category-card span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer a {
+      color: var(--accent);
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Product Categories</h1>
+    <p>Category gallery using free remote image URLs.</p>
+    <p id="choice-message" aria-live="polite">Choose a category.</p>
+  </header>
+
+  <main>
+    <section class="category-grid" aria-label="Product categories">
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Electronics products" data-category="Electronics">
+        <div>
+          <h2>💻 Electronics</h2>
+          <span>Devices, gadgets, accessories, and tech essentials.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Fashion products" data-category="Fashion">
+        <div>
+          <h2>👕 Fashion</h2>
+          <span>Clothing, shoes, and everyday style items.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Home and kitchen products" data-category="Home & Kitchen">
+        <div>
+          <h2>🏠 Home &amp; Kitchen</h2>
+          <span>Home goods, kitchen tools, and practical decor.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Sports and outdoors products" data-category="Sports & Outdoors">
+        <div>
+          <h2>⚽ Sports &amp; Outdoors</h2>
+          <span>Equipment for training, games, and outdoor activity.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Books" data-category="Books">
+        <div>
+          <h2>📚 Books</h2>
+          <span>Reading, learning, study, and reference materials.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/3662667/pexels-photo-3662667.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Toys and games" data-category="Toys & Games">
+        <div>
+          <h2>🧸 Toys &amp; Games</h2>
+          <span>Play items, games, puzzles, and children’s toys.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/3373746/pexels-photo-3373746.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Beauty and personal care products" data-category="Beauty & Personal Care">
+        <div>
+          <h2>💄 Beauty &amp; Personal Care</h2>
+          <span>Cosmetics, skincare, grooming, and self-care items.</span>
+        </div>
+      </article>
+
+      <article class="category-card">
+        <img src="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Cat pet supplies" data-category="Pet Supplies">
+        <div>
+          <h2>🐶 Pet Supplies</h2>
+          <span>Food, toys, grooming tools, and pet accessories.</span>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer>
+    Images are loaded from free Pexels image URLs. Replace any URL if you want different curated photos.
+  </footer>
+
+  <script>
+    // Replace this with the CategoryEventFunctionUrl output after deployment.
+    const categoryEventUrl = "https://wka7fyykyurlkslpdosujbd2ji0pspyl.lambda-url.us-east-1.on.aws/";
+    const message = document.getElementById("choice-message");
+
+    document.querySelectorAll(".category-card img").forEach((image) => {
+      image.addEventListener("click", async () => {
+        const category = image.dataset.category;
+        // Shows the selected category immediately.
+        message.textContent = `nice choice, you choose ${category}`;
+
+        try {
+          // Sends the click event to Lambda, then Firehose stores it in S3.
+          await fetch(categoryEventUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ category }),
+          });
+        } catch (error) {
+          console.warn("Category event was not sent.", error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
