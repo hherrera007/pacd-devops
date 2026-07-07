@@ -47,7 +47,7 @@ class PacdDevopsStack(Stack):
             vpc=pacd_vpc.vpc,
         )
         Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
-        """
+
         # Validates CSV files and writes invalid rows to S3.
         csv_mover = S3CsvMover(
             self,
@@ -65,7 +65,7 @@ class PacdDevopsStack(Stack):
             "CsvUploadUrl",
             bucket=files_bucket.bucket,
         )
-        Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)"""
+        Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
 
         # Streams category click events to S3 through Firehose.
         category_events_stream = CategoryEventsStream(self, "CategoryEventsStream")
