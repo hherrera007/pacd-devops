@@ -52,10 +52,10 @@ class PacdPostgresDatabase(Construct):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-    def allow_connections_from(self, peer: ec2.ISecurityGroup) -> None:
+    def allow_connections_from(self, peer: ec2.ISecurityGroup, tag: str = "loader") -> None:
         # Allows only the provided security group to connect to PostgreSQL.
         self.security_group.add_ingress_rule(
             peer=peer,
             connection=ec2.Port.tcp(5432),
-            description="Allow PostgreSQL access from the CSV loader Lambda.",
+            description=f"Allow PostgreSQL access from the demo {tag} Lambda.",
         )

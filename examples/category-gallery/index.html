@@ -199,23 +199,21 @@
     const message = document.getElementById("choice-message");
 
     document.querySelectorAll(".category-card img").forEach((image) => {
-      image.addEventListener("click", async () => {
+      image.addEventListener("click", () => {
         const category = image.dataset.category;
         // Shows the selected category immediately.
         message.textContent = `nice choice, you choose ${category}`;
 
-        try {
-          // Sends the click event to Lambda, then Firehose stores it in S3.
-          await fetch(categoryEventUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ category }),
-          });
-        } catch (error) {
+        // Sends the same JSON request as before, without awaiting the response.
+        fetch(categoryEventUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ category }),
+        }).catch((error) => {
           console.warn("Category event was not sent.", error);
-        }
+        });
       });
     });
   </script>

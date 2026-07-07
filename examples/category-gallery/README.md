@@ -29,6 +29,8 @@ It also sends this JSON payload to the Lambda URL:
 }
 ```
 
+The page does not wait for the Lambda response. It updates the selected category message immediately and lets the request continue in the background.
+
 ## What AWS Stores
 
 The Lambda adds the UTC date-time, source IP, and user agent, then sends the event to Amazon Data Firehose. Firehose stores the records in S3 as JSON Lines files.

@@ -232,19 +232,52 @@ curl -X POST \
 
 This demo URL is public and does not use API Gateway or authentication.
 
+## View Category Analytics
+
+After deployment, CloudFormation prints the public analytics Lambda Function URL as:
+
+```text
+CategoryAnalyticsFunctionUrl
+```
+
+The static dashboard reads category click totals from the PostgreSQL `category_events` table and renders:
+
+- A bar chart with total clicks per category.
+- A line chart with click trends per category grouped every 60 seconds.
+- A bar chart with clicks grouped by client IP.
+
+Open [examples/category-analytics-dashboard/index.html](examples/category-analytics-dashboard/index.html) and replace:
+
+```javascript
+const analyticsUrl = "https://REPLACE_WITH_CATEGORY_ANALYTICS_FUNCTION_URL/";
+```
+
+with the deployed `CategoryAnalyticsFunctionUrl`.
+
+### Browser CORS Behavior
+
+The category click page sends the same JSON request format that the Lambda expects, but it does not `await` the response. The click message updates immediately while the request continues in the background.
+
+The analytics dashboard must read JSON to draw the charts. The analytics Lambda returns CORS headers and allows `GET` and `OPTIONS` requests.
+
 ## Example Data
 
 - Example ventas table: [docs/example-ventas-table.md](docs/example-ventas-table.md)
+- Example category events table: [docs/example-category-events-table.md](docs/example-category-events-table.md)
 - CSV upload HTML demo: [examples/csv-upload-demo/README.md](examples/csv-upload-demo/README.md)
+- Category gallery event demo: [examples/category-gallery/README.md](examples/category-gallery/README.md)
+- Category analytics dashboard: [examples/category-analytics-dashboard/README.md](examples/category-analytics-dashboard/README.md)
 
 ## Cost References
 
 - VPC cost notes: [docs/vpc-costs.md](docs/vpc-costs.md)
 - S3 cost notes: [docs/s3-costs.md](docs/s3-costs.md)
 - Lambda S3 CSV mover cost notes: [docs/lambda-s3-costs.md](docs/lambda-s3-costs.md)
+- Category events Firehose cost notes: [docs/category-events-firehose-costs.md](docs/category-events-firehose-costs.md)
 - RDS PostgreSQL cost notes: [docs/rds-costs.md](docs/rds-costs.md)
 - Security groups cost notes: [docs/security-groups-costs.md](docs/security-groups-costs.md)
 - AWS VPC pricing: <https://aws.amazon.com/vpc/pricing/>
 - AWS S3 pricing: <https://aws.amazon.com/s3/pricing/>
 - AWS Lambda pricing: <https://aws.amazon.com/lambda/pricing/>
+- AWS Data Firehose pricing: <https://aws.amazon.com/firehose/pricing/>
 - AWS RDS for PostgreSQL pricing: <https://aws.amazon.com/rds/postgresql/pricing/>

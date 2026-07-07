@@ -12,6 +12,8 @@ This stack creates a public Lambda Function URL that receives category click eve
 | Firehose delivery stream | Buffers events and delivers them to S3 | Charged by ingested GB |
 | S3 bucket | Stores delivered event files | Charged by storage and requests |
 | Bucket auto-delete helper | Empties the demo bucket during stack deletion | Tiny Lambda/custom resource cost only when used |
+| S3 loader Lambda | Inserts delivered event files into PostgreSQL | Charged by requests and duration |
+| Analytics Lambda | Reads PostgreSQL aggregates for the dashboard | Charged by requests and duration |
 | IAM role/policies | Permissions for Lambda and Firehose | No direct charge |
 
 ## Firehose Cost
@@ -53,3 +55,7 @@ Pricing references:
 ## Data Delay
 
 Firehose buffers records before writing to S3. This stack uses a low demo buffer of 60 seconds or 1 MiB, so events will not appear in S3 instantly.
+
+After Firehose creates a new S3 object, the S3 loader Lambda runs and inserts each JSON Lines record into the PostgreSQL `category_events` table.
+
+The analytics dashboard calls a separate Lambda Function URL. That Lambda reads totals and 60-second click buckets from PostgreSQL.
