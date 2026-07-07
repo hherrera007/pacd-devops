@@ -92,15 +92,13 @@ class PacdDevopsStack(Stack):
         postgres_database.allow_connections_from(category_clicks_analytics.security_group, "analytics")
         Tags.of(category_clicks_analytics).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
 
-
-        """
         CfnOutput(
             self,
             "CsvUploadFunctionUrl",
             # Prints the public upload URL after deployment.
             value=csv_upload_url.function_url.url,
             description="Public demo URL for uploading CSV files to S3 inbound/.",
-        )"""
+        )
 
         CfnOutput(
             self,
