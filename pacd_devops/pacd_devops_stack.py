@@ -19,7 +19,7 @@ from pacd_devops.streaming.category_events_stream import CategoryEventsStream
 
 
 # Set to False to skip only RDS; DB-dependent Lambdas still deploy with empty DB values.
-ENABLE_POSTGRES_DATABASE = True
+ENABLE_POSTGRES_DATABASE = False
 
 
 class PacdDevopsStack(Stack):
