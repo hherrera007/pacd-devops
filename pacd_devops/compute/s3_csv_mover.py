@@ -66,8 +66,9 @@ class S3CsvMover(Construct):
                 "BUCKET_NAME": bucket.bucket_name,
                 "INBOUND_PREFIX": "inbound/",
                 "OUTBOUND_PREFIX": "outbound/",
-                "DATABASE_HOST": database.db_instance_endpoint_address,
-                "DATABASE_PORT": database.db_instance_endpoint_port,
+                # Empty when PostgreSQL is disabled by the stack flag.
+                "DATABASE_HOST": database.db_instance_endpoint_address if database else "",
+                "DATABASE_PORT": database.db_instance_endpoint_port if database else "",
                 "DATABASE_NAME": os.getenv("DATABASE_NAME", "pacd"),
                 "DATABASE_USERNAME": os.getenv("DATABASE_USERNAME", ""),
                 "DATABASE_PASSWORD": os.getenv("DATABASE_PASSWORD", ""),

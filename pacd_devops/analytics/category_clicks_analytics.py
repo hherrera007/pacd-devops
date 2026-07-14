@@ -62,8 +62,8 @@ class CategoryClicksAnalytics(Construct):
             security_groups=[self.security_group],
             environment={
                 # Database values used by the analytics Lambda.
-                "DATABASE_HOST": database.db_instance_endpoint_address,
-                "DATABASE_PORT": database.db_instance_endpoint_port,
+                "DATABASE_HOST": database.db_instance_endpoint_address if database else "",
+                "DATABASE_PORT": database.db_instance_endpoint_port if database else "",
                 "DATABASE_NAME": os.getenv("DATABASE_NAME", "pacd"),
                 "DATABASE_USERNAME": os.getenv("DATABASE_USERNAME", ""),
                 "DATABASE_PASSWORD": os.getenv("DATABASE_PASSWORD", ""),

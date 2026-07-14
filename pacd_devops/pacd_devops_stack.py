@@ -18,6 +18,10 @@ from pacd_devops.streaming.category_events_to_postgres import CategoryEventsToPo
 from pacd_devops.streaming.category_events_stream import CategoryEventsStream
 
 
+# Set to False to skip only RDS; DB-dependent Lambdas still deploy with empty DB values.
+ENABLE_POSTGRES_DATABASE = True
+
+
 class PacdDevopsStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -40,25 +44,6 @@ class PacdDevopsStack(Stack):
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
 
-        # Small database for demos.
-        postgres_database = PacdPostgresDatabase(
-            self,
-            "PacdPostgresDatabase",
-            vpc=pacd_vpc.vpc,
-        )
-        Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
-
-        # Validates CSV files and writes invalid rows to S3.
-        csv_mover = S3CsvMover(
-            self,
-            "S3CsvMover",
-            bucket=files_bucket.bucket,
-            database=postgres_database.database,
-            vpc=pacd_vpc.vpc,
-        )
-        postgres_database.allow_connections_from(csv_mover.security_group)
-        Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
-
         # Public demo URL that uploads CSV files into S3 inbound/.
         csv_upload_url = CsvUploadUrl(
             self,
@@ -71,26 +56,51 @@ class PacdDevopsStack(Stack):
         category_events_stream = CategoryEventsStream(self, "CategoryEventsStream")
         Tags.of(category_events_stream).add(TAG_KEYS.MODULE, MODULES.STREAMING)
 
-        # Loads Firehose event files into PostgreSQL.
+        postgres_database = None
+
+        if ENABLE_POSTGRES_DATABASE:
+            # Small database for demos.
+            postgres_database = PacdPostgresDatabase(
+                self,
+                "PacdPostgresDatabase",
+                vpc=pacd_vpc.vpc,
+            )
+            Tags.of(postgres_database).add(TAG_KEYS.MODULE, MODULES.DATABASE)
+
+        # Validates CSV files and inserts valid rows into PostgreSQL when enabled.
+        csv_mover = S3CsvMover(
+            self,
+            "S3CsvMover",
+            bucket=files_bucket.bucket,
+            database=postgres_database.database if postgres_database else None,
+            vpc=pacd_vpc.vpc,
+        )
+        Tags.of(csv_mover).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        # Loads Firehose event files into PostgreSQL when enabled.
         category_events_to_postgres = CategoryEventsToPostgres(
             self,
             "CategoryEventsToPostgres",
             bucket=category_events_stream.bucket,
-            database=postgres_database.database,
+            database=postgres_database.database if postgres_database else None,
             vpc=pacd_vpc.vpc,
         )
-        postgres_database.allow_connections_from(category_events_to_postgres.security_group, "category")
         Tags.of(category_events_to_postgres).add(TAG_KEYS.MODULE, MODULES.DATABASE)
 
-        # Reads category click totals and 60-second evolution from PostgreSQL.
+        # Reads category click totals from PostgreSQL when enabled.
         category_clicks_analytics = CategoryClicksAnalytics(
             self,
             "CategoryClicksAnalytics",
-            database=postgres_database.database,
+            database=postgres_database.database if postgres_database else None,
             vpc=pacd_vpc.vpc,
         )
-        postgres_database.allow_connections_from(category_clicks_analytics.security_group, "analytics")
         Tags.of(category_clicks_analytics).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        if postgres_database:
+            # Opens PostgreSQL only to Lambda security groups.
+            postgres_database.allow_connections_from(csv_mover.security_group)
+            postgres_database.allow_connections_from(category_events_to_postgres.security_group, "category")
+            postgres_database.allow_connections_from(category_clicks_analytics.security_group, "analytics")
 
         CfnOutput(
             self,

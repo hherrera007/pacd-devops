@@ -185,6 +185,16 @@ Variable usage:
 - `DATABASE_PORT`: PostgreSQL port, normally `5432`.
 - `DATABASE_NAME`: PostgreSQL database name, currently `pacd`.
 
+## Optional PostgreSQL Flag
+
+The PostgreSQL database is controlled by a code flag in [pacd_devops_stack.py](pacd_devops/pacd_devops_stack.py):
+
+```python
+ENABLE_POSTGRES_DATABASE = True
+```
+
+Set it to `False` to skip creating RDS. The database-dependent Lambdas still deploy, but their database host and port are empty, so database workflows will not work until PostgreSQL is enabled again.
+
 ## Bootstrap the Stack for the First Time
 
 Before deploying a CDK stack into a new AWS account and region, bootstrap the AWS environment.
