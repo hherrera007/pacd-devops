@@ -25,12 +25,33 @@ ORDER BY category;
 """
 
 
+TOTALS_BY_IP_SQL = """
+SELECT category, COUNT(*) AS clicks
+FROM category_events
+WHERE source_ip = %s::inet
+GROUP BY category
+ORDER BY category;
+"""
+
+
 EVOLUTION_SQL = """
 SELECT
     date_trunc('minute', event_time) AS bucket_start,
     category,
     COUNT(*) AS clicks
 FROM category_events
+GROUP BY bucket_start, category
+ORDER BY bucket_start, category;
+"""
+
+
+EVOLUTION_BY_IP_SQL = """
+SELECT
+    date_trunc('minute', event_time) AS bucket_start,
+    category,
+    COUNT(*) AS clicks
+FROM category_events
+WHERE source_ip = %s::inet
 GROUP BY bucket_start, category
 ORDER BY bucket_start, category;
 """
@@ -57,8 +78,9 @@ def handler(event, _context):
         try:
             # Ensures the dashboard returns empty data before the first event.
             ensure_table_exists(connection)
-            totals = fetch_totals(connection)
-            evolution = fetch_evolution(connection)
+            selected_ip = get_selected_ip(event)
+            totals = fetch_totals(connection, selected_ip)
+            evolution = fetch_evolution(connection, selected_ip)
             clicks_by_ip = fetch_clicks_by_ip(connection)
         finally:
             connection.close()
@@ -69,6 +91,7 @@ def handler(event, _context):
                 "totals": totals,
                 "evolution": evolution,
                 "clicks_by_ip": clicks_by_ip,
+                "selected_ip": selected_ip,
             },
         )
     except Exception as error:
@@ -76,11 +99,14 @@ def handler(event, _context):
         return response(500, {"message": str(error)})
 
 
-def fetch_totals(connection):
+def fetch_totals(connection, selected_ip=None):
     # Returns one total click count per category.
     cursor = connection.cursor()
     try:
-        cursor.execute(TOTALS_SQL)
+        if selected_ip:
+            cursor.execute(TOTALS_BY_IP_SQL, (selected_ip,))
+        else:
+            cursor.execute(TOTALS_SQL)
         return [
             {
                 "category": row[0],
@@ -92,11 +118,14 @@ def fetch_totals(connection):
         cursor.close()
 
 
-def fetch_evolution(connection):
+def fetch_evolution(connection, selected_ip=None):
     # Groups clicks into 60-second buckets by category.
     cursor = connection.cursor()
     try:
-        cursor.execute(EVOLUTION_SQL)
+        if selected_ip:
+            cursor.execute(EVOLUTION_BY_IP_SQL, (selected_ip,))
+        else:
+            cursor.execute(EVOLUTION_SQL)
         return [
             {
                 "bucket_start": row[0].isoformat(),
@@ -123,6 +152,13 @@ def fetch_clicks_by_ip(connection):
         ]
     finally:
         cursor.close()
+
+
+def get_selected_ip(event):
+    # Optional dashboard filter: ?source_ip=<ip>.
+    query_params = event.get("queryStringParameters") or {}
+    selected_ip = (query_params.get("source_ip") or "").strip()
+    return selected_ip or None
 
 
 def ensure_table_exists(connection):
