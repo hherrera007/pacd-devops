@@ -47,7 +47,7 @@ Open `csv-upload-demo.html` in the browser, select the CSV file, and click `Subi
 The page sends the file to the Lambda Function URL. The Lambda stores the file in:
 
 ```text
-s3://files.pacd.edu/inbound/
+s3://<FILES_BUCKET_NAME>/inbound/
 ```
 
 The Lambda renames every uploaded file using this pattern:

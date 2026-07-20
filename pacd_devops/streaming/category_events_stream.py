@@ -3,14 +3,14 @@ from constructs import Construct
 
 
 class CategoryEventsStream(Construct):
-    def __init__(self, scope: Construct, construct_id: str) -> None:
+    def __init__(self, scope: Construct, construct_id: str, bucket_name: str) -> None:
         super().__init__(scope, construct_id)
 
         self.bucket = s3.Bucket(
             self,
             "CategoryEventsBucket",
             # Stores category click events delivered by Firehose.
-            bucket_name="category-events.pacd.edu",
+            bucket_name=bucket_name,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             encryption=s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,

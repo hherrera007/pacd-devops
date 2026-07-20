@@ -1,6 +1,6 @@
 # Lambda S3 CSV Mover Cost Notes
 
-This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `inbound/` prefix of the `files.pacd.edu` S3 bucket.
+This stack defines a Lambda function that runs when a `.csv` file is uploaded to the `inbound/` prefix of the S3 bucket configured by `FILES_BUCKET_NAME`.
 
 The stack also defines a public demo Lambda Function URL that accepts small CSV uploads and writes them to the same `inbound/` prefix. The URL is printed as the `CsvUploadFunctionUrl` CloudFormation output after deployment.
 

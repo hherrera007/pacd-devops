@@ -1,6 +1,8 @@
 # S3 Cost Notes
 
-This stack creates an S3 bucket named `files.pacd.edu`.
+This stack creates an S3 bucket using the `.env` value `FILES_BUCKET_NAME`.
+
+S3 bucket names are globally unique across all AWS accounts. Choose a name that no other AWS account is already using.
 
 ## Current Bucket Configuration
 

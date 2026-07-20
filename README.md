@@ -173,6 +173,8 @@ DATABASE_USERNAME=pacd_admin
 DATABASE_PASSWORD=<YOUR_DEMO_DATABASE_PASSWORD>
 DATABASE_PORT=5432
 DATABASE_NAME=pacd
+FILES_BUCKET_NAME=<GLOBALLY_UNIQUE_FILES_BUCKET_NAME>
+CATEGORY_EVENTS_BUCKET_NAME=<GLOBALLY_UNIQUE_CATEGORY_EVENTS_BUCKET_NAME>
 ```
 
 Variable usage:
@@ -184,6 +186,15 @@ Variable usage:
 - `DATABASE_PASSWORD`: PostgreSQL demo password.
 - `DATABASE_PORT`: PostgreSQL port, normally `5432`.
 - `DATABASE_NAME`: PostgreSQL database name, currently `pacd`.
+- `FILES_BUCKET_NAME`: S3 bucket used for CSV uploads and file processing.
+- `CATEGORY_EVENTS_BUCKET_NAME`: S3 bucket where Firehose stores category click event files.
+
+S3 bucket names must be globally unique across all AWS accounts, not only inside your account. If a bucket name is already taken, deployment fails. A safe pattern is:
+
+```text
+files-pacd-<YOUR_AWS_ACCOUNT_ID>-<AWS_REGION>
+category-events-pacd-<YOUR_AWS_ACCOUNT_ID>-<AWS_REGION>
+```
 
 ## Optional PostgreSQL Flag
 

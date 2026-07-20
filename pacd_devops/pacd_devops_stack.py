@@ -1,3 +1,5 @@
+import os
+
 from aws_cdk import (
     CfnOutput,
     # Duration,
@@ -39,7 +41,7 @@ class PacdDevopsStack(Stack):
         files_bucket = PacdFilesBucket(
             self,
             "PacdFilesBucket",
-            bucket_name="files.pacd.edu",
+            bucket_name=os.getenv("FILES_BUCKET_NAME", "files.pacd.edu"),
         )
         Tags.of(files_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
@@ -53,7 +55,11 @@ class PacdDevopsStack(Stack):
         Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
 
         # Streams category click events to S3 through Firehose.
-        category_events_stream = CategoryEventsStream(self, "CategoryEventsStream")
+        category_events_stream = CategoryEventsStream(
+            self,
+            "CategoryEventsStream",
+            bucket_name=os.getenv("CATEGORY_EVENTS_BUCKET_NAME", "category-events.pacd.edu"),
+        )
         Tags.of(category_events_stream).add(TAG_KEYS.MODULE, MODULES.STREAMING)
 
         postgres_database = None
