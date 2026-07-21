@@ -1,3 +1,6 @@
+import base64
+import csv
+import io
 import json
 import os
 
@@ -34,6 +37,15 @@ ORDER BY category;
 """
 
 
+TOTALS_UNKNOWN_IP_SQL = """
+SELECT category, COUNT(*) AS clicks
+FROM category_events
+WHERE source_ip IS NULL
+GROUP BY category
+ORDER BY category;
+"""
+
+
 EVOLUTION_SQL = """
 SELECT
     date_trunc('minute', event_time) AS bucket_start,
@@ -57,11 +69,67 @@ ORDER BY bucket_start, category;
 """
 
 
+EVOLUTION_UNKNOWN_IP_SQL = """
+SELECT
+    date_trunc('minute', event_time) AS bucket_start,
+    category,
+    COUNT(*) AS clicks
+FROM category_events
+WHERE source_ip IS NULL
+GROUP BY bucket_start, category
+ORDER BY bucket_start, category;
+"""
+
+
 CLICKS_BY_IP_SQL = """
 SELECT COALESCE(source_ip::text, 'unknown') AS source_ip, COUNT(*) AS clicks
 FROM category_events
 GROUP BY source_ip
 ORDER BY clicks DESC, source_ip;
+"""
+
+
+EVENTS_SQL = """
+SELECT
+    id,
+    event_type,
+    category,
+    event_time,
+    source_ip::text,
+    user_agent,
+    created_at
+FROM category_events
+ORDER BY event_time, id;
+"""
+
+
+EVENTS_BY_IP_SQL = """
+SELECT
+    id,
+    event_type,
+    category,
+    event_time,
+    source_ip::text,
+    user_agent,
+    created_at
+FROM category_events
+WHERE source_ip = %s::inet
+ORDER BY event_time, id;
+"""
+
+
+EVENTS_UNKNOWN_IP_SQL = """
+SELECT
+    id,
+    event_type,
+    category,
+    event_time,
+    source_ip::text,
+    user_agent,
+    created_at
+FROM category_events
+WHERE source_ip IS NULL
+ORDER BY event_time, id;
 """
 
 
@@ -79,6 +147,12 @@ def handler(event, _context):
             # Ensures the dashboard returns empty data before the first event.
             ensure_table_exists(connection)
             selected_ip = get_selected_ip(event)
+
+            download_format = get_download_format(event)
+            if download_format:
+                events = fetch_events(connection, selected_ip)
+                return download_response(download_format, events, selected_ip)
+
             totals = fetch_totals(connection, selected_ip)
             evolution = fetch_evolution(connection, selected_ip)
             clicks_by_ip = fetch_clicks_by_ip(connection)
@@ -103,7 +177,9 @@ def fetch_totals(connection, selected_ip=None):
     # Returns one total click count per category.
     cursor = connection.cursor()
     try:
-        if selected_ip:
+        if selected_ip == "unknown":
+            cursor.execute(TOTALS_UNKNOWN_IP_SQL)
+        elif selected_ip:
             cursor.execute(TOTALS_BY_IP_SQL, (selected_ip,))
         else:
             cursor.execute(TOTALS_SQL)
@@ -122,7 +198,9 @@ def fetch_evolution(connection, selected_ip=None):
     # Groups clicks into 60-second buckets by category.
     cursor = connection.cursor()
     try:
-        if selected_ip:
+        if selected_ip == "unknown":
+            cursor.execute(EVOLUTION_UNKNOWN_IP_SQL)
+        elif selected_ip:
             cursor.execute(EVOLUTION_BY_IP_SQL, (selected_ip,))
         else:
             cursor.execute(EVOLUTION_SQL)
@@ -154,11 +232,93 @@ def fetch_clicks_by_ip(connection):
         cursor.close()
 
 
+def fetch_events(connection, selected_ip=None):
+    # Returns raw rows used for JSON, CSV, and Parquet downloads.
+    cursor = connection.cursor()
+    try:
+        if selected_ip == "unknown":
+            cursor.execute(EVENTS_UNKNOWN_IP_SQL)
+        elif selected_ip:
+            cursor.execute(EVENTS_BY_IP_SQL, (selected_ip,))
+        else:
+            cursor.execute(EVENTS_SQL)
+
+        return [
+            {
+                "id": row[0],
+                "event_type": row[1],
+                "category": row[2],
+                "event_time": row[3].isoformat(),
+                "source_ip": row[4],
+                "user_agent": row[5],
+                "created_at": row[6].isoformat(),
+            }
+            for row in cursor.fetchall()
+        ]
+    finally:
+        cursor.close()
+
+
 def get_selected_ip(event):
     # Optional dashboard filter: ?source_ip=<ip>.
     query_params = event.get("queryStringParameters") or {}
     selected_ip = (query_params.get("source_ip") or "").strip()
     return selected_ip or None
+
+
+def get_download_format(event):
+    # Optional download format: ?format=json|csv|parquet.
+    query_params = event.get("queryStringParameters") or {}
+    value = (query_params.get("format") or "").strip().lower()
+    return value if value in {"json", "csv", "parquet"} else None
+
+
+def download_response(download_format, events, selected_ip=None):
+    if download_format == "json":
+        return file_response(
+            "application/json",
+            build_file_name("category-events", selected_ip, "json"),
+            json.dumps(events),
+        )
+
+    if download_format == "csv":
+        return file_response(
+            "text/csv",
+            build_file_name("category-events", selected_ip, "csv"),
+            events_to_csv(events),
+        )
+
+    return file_response(
+        "application/vnd.apache.parquet",
+        build_file_name("category-events", selected_ip, "parquet"),
+        events_to_parquet(events),
+        is_base64_encoded=True,
+    )
+
+
+def events_to_csv(events):
+    output = io.StringIO()
+    fieldnames = ["id", "event_type", "category", "event_time", "source_ip", "user_agent", "created_at"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(events)
+    return output.getvalue()
+
+
+def events_to_parquet(events):
+    # Imported only for Parquet downloads to keep normal dashboard calls lighter.
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    table = pa.Table.from_pylist(events)
+    output = io.BytesIO()
+    pq.write_table(table, output)
+    return base64.b64encode(output.getvalue()).decode("ascii")
+
+
+def build_file_name(base_name, selected_ip, extension):
+    suffix = f"-{selected_ip}" if selected_ip else ""
+    return f"{base_name}{suffix}.{extension}"
 
 
 def ensure_table_exists(connection):
@@ -192,4 +352,19 @@ def response(status_code, body):
             "Content-Type": "application/json",
         },
         "body": json.dumps(body),
+    }
+
+
+def file_response(content_type, file_name, body, is_base64_encoded=False):
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS",
+            "Access-Control-Allow-Headers": "content-type",
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Content-Type": content_type,
+        },
+        "isBase64Encoded": is_base64_encoded,
+        "body": body,
     }

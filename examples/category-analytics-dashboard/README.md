@@ -27,6 +27,18 @@ Hover over the larger points in the `Click Trend` line chart to see the bucket t
 
 The dashboard uses Chart.js from a public CDN.
 
+## Downloads
+
+Use the download buttons to export the raw `category_events` rows as:
+
+- JSON
+- CSV
+- Parquet
+
+If an IP filter is active, the downloaded file only includes rows for that IP.
+
+Parquet export uses `pyarrow` in the analytics Lambda package, so Docker bundling downloads a larger dependency during deployment.
+
 ## Table
 
 The dashboard reads from the PostgreSQL `category_events` table.

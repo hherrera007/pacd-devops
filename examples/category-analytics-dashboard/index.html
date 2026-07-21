@@ -68,6 +68,24 @@
       color: var(--text);
     }
 
+    .download-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .download-actions a {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
+
     .ip-links {
       display: flex;
       flex-wrap: wrap;
@@ -163,6 +181,11 @@
       <span id="filter-text"></span>
       <button class="secondary" id="clear-filter-button" type="button">Clear IP filter</button>
     </div>
+    <div class="download-actions" aria-label="Download analytics data">
+      <a id="download-json" href="#">Download JSON</a>
+      <a id="download-csv" href="#">Download CSV</a>
+      <a id="download-parquet" href="#">Download Parquet</a>
+    </div>
   </header>
 
   <main>
@@ -194,6 +217,9 @@
     const filterText = document.getElementById("filter-text");
     const clearFilterButton = document.getElementById("clear-filter-button");
     const ipLinks = document.getElementById("ip-links");
+    const downloadJson = document.getElementById("download-json");
+    const downloadCsv = document.getElementById("download-csv");
+    const downloadParquet = document.getElementById("download-parquet");
     let selectedIp = new URLSearchParams(window.location.search).get("source_ip") || "";
     let totalsChart;
     let evolutionChart;
@@ -204,8 +230,10 @@
     clearFilterButton.addEventListener("click", () => {
       selectedIp = "";
       updateUrlFilter();
+      updateDownloadLinks();
       loadAnalytics();
     });
+    updateDownloadLinks();
     loadAnalytics();
 
     async function loadAnalytics() {
@@ -387,6 +415,7 @@
             const index = elements[0].index;
             selectedIp = clicksByIp[index].source_ip;
             updateUrlFilter();
+            updateDownloadLinks();
             loadAnalytics();
           },
           onHover: (event, elements) => {
@@ -442,6 +471,7 @@
         button.addEventListener("click", () => {
           selectedIp = item.source_ip;
           updateUrlFilter();
+          updateDownloadLinks();
           loadAnalytics();
         });
         ipLinks.appendChild(button);
@@ -478,6 +508,23 @@
       }
 
       window.history.replaceState({}, "", url);
+    }
+
+    function updateDownloadLinks() {
+      downloadJson.href = buildDownloadUrl("json");
+      downloadCsv.href = buildDownloadUrl("csv");
+      downloadParquet.href = buildDownloadUrl("parquet");
+    }
+
+    function buildDownloadUrl(format) {
+      const url = new URL(analyticsUrl);
+      url.searchParams.set("format", format);
+
+      if (selectedIp) {
+        url.searchParams.set("source_ip", selectedIp);
+      }
+
+      return url.toString();
     }
 
     function shortenLabel(label, maxLength) {
