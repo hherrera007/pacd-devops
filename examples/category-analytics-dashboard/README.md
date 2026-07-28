@@ -19,7 +19,7 @@ const analyticsUrl = "https://REPLACE_WITH_CATEGORY_ANALYTICS_FUNCTION_URL/";
 
 - `Clicks per Category`: bar chart with the total clicks per category.
 - `Click Trend`: line chart grouped by category and minute.
-- `Clicks per IP`: horizontal bar chart grouped by client IP.
+- `Clicks per IP`: horizontal bar chart with the top 10 client IPs by click count.
 
 Click an IP bar or IP button in `Clicks per IP` to filter the category and trend charts for that client IP. Use `Clear IP filter` to return to the global dashboard.
 

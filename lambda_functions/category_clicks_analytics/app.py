@@ -85,7 +85,8 @@ CLICKS_BY_IP_SQL = """
 SELECT COALESCE(source_ip::text, 'unknown') AS source_ip, COUNT(*) AS clicks
 FROM category_events
 GROUP BY source_ip
-ORDER BY clicks DESC, source_ip;
+ORDER BY clicks DESC, source_ip
+LIMIT 10;
 """
 
 

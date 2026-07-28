@@ -265,7 +265,7 @@ The static dashboard reads category click totals from the PostgreSQL `category_e
 
 - A bar chart with total clicks per category.
 - A line chart with click trends per category grouped every 60 seconds.
-- A bar chart with clicks grouped by client IP.
+- A bar chart with the top 10 client IPs by click count.
 
 Open [examples/category-analytics-dashboard/index.html](examples/category-analytics-dashboard/index.html) and replace:
 
