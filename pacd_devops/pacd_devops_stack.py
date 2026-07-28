@@ -14,6 +14,7 @@ from pacd_devops.compute.csv_upload_url import CsvUploadUrl
 from pacd_devops.compute.s3_csv_mover import S3CsvMover
 from pacd_devops.constants import TAG_KEYS, MODULES
 from pacd_devops.database.pacd_postgres_database import PacdPostgresDatabase
+from pacd_devops.integrations.external_api_enrichment import ExternalApiEnrichment
 from pacd_devops.networking.pacd_vpc import PacdVpc
 from pacd_devops.storage.pacd_files_bucket import PacdFilesBucket
 from pacd_devops.streaming.category_events_to_postgres import CategoryEventsToPostgres
@@ -53,6 +54,22 @@ class PacdDevopsStack(Stack):
             bucket=files_bucket.bucket,
         )
         Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
+
+        # Stores external API raw and comparison payloads.
+        external_api_bucket = PacdFilesBucket(
+            self,
+            "ExternalApiBucket",
+            bucket_name=os.getenv("EXTERNAL_API_BUCKET_NAME", "external-api-pacd-demo"),
+        )
+        Tags.of(external_api_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
+
+        # Calls two external APIs, compares products, and stores the result in S3.
+        external_api_enrichment = ExternalApiEnrichment(
+            self,
+            "ExternalApiEnrichment",
+            bucket=external_api_bucket.bucket,
+        )
+        Tags.of(external_api_enrichment).add(TAG_KEYS.MODULE, MODULES.INTEGRATION)
 
         # Streams category click events to S3 through Firehose.
         category_events_stream = CategoryEventsStream(
@@ -130,4 +147,12 @@ class PacdDevopsStack(Stack):
             # Prints the public analytics URL after deployment.
             value=category_clicks_analytics.function_url.url,
             description="Public demo URL for reading category click analytics.",
+        )
+
+        CfnOutput(
+            self,
+            "ExternalApiEnrichmentFunctionUrl",
+            # Prints the public external API enrichment URL after deployment.
+            value=external_api_enrichment.function_url.url,
+            description="Public demo URL for comparing external product APIs and storing results in S3.",
         )

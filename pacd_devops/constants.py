@@ -12,6 +12,7 @@ class MODULES:
     COMPUTE = "compute"
     SECURITY = "security"
     STREAMING = "streaming"
+    INTEGRATION = "integration"
 
 
 class TAG_VALUES:
