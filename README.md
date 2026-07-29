@@ -178,6 +178,7 @@ CATEGORY_EVENTS_BUCKET_NAME=<GLOBALLY_UNIQUE_CATEGORY_EVENTS_BUCKET_NAME>
 EXTERNAL_API_BUCKET_NAME=<GLOBALLY_UNIQUE_EXTERNAL_API_BUCKET_NAME>
 PRODUCTS_API_URL=https://api.escuelajs.co/api/v1/products
 BINANCE_PRICE_URL=https://data-api.binance.vision/api/v3/ticker/price
+CRYPTO_PRICE_CACHE_TTL_SECONDS=10
 ```
 
 Variable usage:
@@ -194,6 +195,7 @@ Variable usage:
 - `EXTERNAL_API_BUCKET_NAME`: S3 bucket where external API category cache payloads are stored.
 - `PRODUCTS_API_URL`: external products API used by the enrichment Lambda.
 - `BINANCE_PRICE_URL`: Binance ticker price endpoint used by the crypto prices Lambda.
+- `CRYPTO_PRICE_CACHE_TTL_SECONDS`: shared S3 cache duration for crypto prices.
 
 S3 bucket names must be globally unique across all AWS accounts, not only inside your account. If a bucket name is already taken, deployment fails. A safe pattern is:
 

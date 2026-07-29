@@ -249,8 +249,9 @@
               borderColor: config.color,
               backgroundColor: `${config.color}22`,
               borderWidth: 3,
-              pointRadius: 4,
-              pointHoverRadius: 7,
+              pointRadius: 7,
+              pointHoverRadius: 11,
+              pointHitRadius: 18,
               tension: 0.25,
               fill: true,
             }],
@@ -262,6 +263,9 @@
             plugins: {
               legend: { display: false },
               tooltip: {
+                enabled: true,
+                mode: "nearest",
+                intersect: false,
                 callbacks: {
                   label: (context) => `$${Number(context.raw).toLocaleString(undefined, {
                     minimumFractionDigits: config.decimals,
@@ -269,6 +273,10 @@
                   })}`,
                 },
               },
+            },
+            interaction: {
+              mode: "nearest",
+              intersect: false,
             },
             scales: {
               x: {

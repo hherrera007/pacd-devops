@@ -21,6 +21,7 @@ Set this value in `.env`:
 
 ```text
 BINANCE_PRICE_URL=https://data-api.binance.vision/api/v3/ticker/price
+CRYPTO_PRICE_CACHE_TTL_SECONDS=10
 ```
 
 ## Request

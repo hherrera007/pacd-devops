@@ -28,11 +28,13 @@ def handler(event, _context):
     if method != "GET":
         return response(405, {"message": "Use GET to read crypto prices."})
 
+    # Returns shared S3 cache when it is still inside the TTL.
     cached_payload = read_cached_prices()
     if cached_payload:
         cached_payload["cache_hit"] = True
         return response(200, cached_payload)
 
+    # Refreshes all coin prices after a cache miss.
     prices = [read_coin_price(coin) for coin in COINS]
     payload = {
         "source": "binance",
@@ -107,6 +109,7 @@ def store_cached_prices(payload):
 
 
 def cache_ttl_seconds():
+    # CDK maps CRYPTO_PRICE_CACHE_TTL_SECONDS into this Lambda variable.
     return int(os.environ["CACHE_TTL_SECONDS"])
 
 

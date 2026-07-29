@@ -49,7 +49,8 @@ class CryptoPrices(Construct):
                 "BINANCE_PRICE_URL": os.getenv("BINANCE_PRICE_URL", "https://data-api.binance.vision/api/v3/ticker/price"),
                 "BUCKET_NAME": bucket.bucket_name,
                 "CACHE_KEY": "crypto-prices/latest.json",
-                "CACHE_TTL_SECONDS": "10",
+                # Controls how long all clients reuse the shared S3 cache.
+                "CACHE_TTL_SECONDS": os.getenv("CRYPTO_PRICE_CACHE_TTL_SECONDS", "10"),
             },
         )
 
