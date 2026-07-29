@@ -176,8 +176,8 @@ DATABASE_NAME=pacd
 FILES_BUCKET_NAME=<GLOBALLY_UNIQUE_FILES_BUCKET_NAME>
 CATEGORY_EVENTS_BUCKET_NAME=<GLOBALLY_UNIQUE_CATEGORY_EVENTS_BUCKET_NAME>
 EXTERNAL_API_BUCKET_NAME=<GLOBALLY_UNIQUE_EXTERNAL_API_BUCKET_NAME>
-PRODUCTS_API_ONE_URL=https://fakestoreapi.com/products
-PRODUCTS_API_TWO_URL=https://api.escuelajs.co/api/v1/products
+PRODUCTS_API_URL=https://api.escuelajs.co/api/v1/products
+BINANCE_PRICE_URL=https://data-api.binance.vision/api/v3/ticker/price
 ```
 
 Variable usage:
@@ -191,9 +191,9 @@ Variable usage:
 - `DATABASE_NAME`: PostgreSQL database name, currently `pacd`.
 - `FILES_BUCKET_NAME`: S3 bucket used for CSV uploads and file processing.
 - `CATEGORY_EVENTS_BUCKET_NAME`: S3 bucket where Firehose stores category click event files.
-- `EXTERNAL_API_BUCKET_NAME`: S3 bucket where external API raw and comparison payloads are stored.
-- `PRODUCTS_API_ONE_URL`: first external products API used by the enrichment Lambda.
-- `PRODUCTS_API_TWO_URL`: second external products API used by the enrichment Lambda.
+- `EXTERNAL_API_BUCKET_NAME`: S3 bucket where external API category cache payloads are stored.
+- `PRODUCTS_API_URL`: external products API used by the enrichment Lambda.
+- `BINANCE_PRICE_URL`: Binance ticker price endpoint used by the crypto prices Lambda.
 
 S3 bucket names must be globally unique across all AWS accounts, not only inside your account. If a bucket name is already taken, deployment fails. A safe pattern is:
 
@@ -260,7 +260,7 @@ curl -X POST \
 
 This demo URL is public and does not use API Gateway or authentication.
 
-## Compare External Product APIs
+## Load External Products by Category
 
 After deployment, CloudFormation prints the public external API enrichment Lambda Function URL as:
 
@@ -268,7 +268,7 @@ After deployment, CloudFormation prints the public external API enrichment Lambd
 ExternalApiEnrichmentFunctionUrl
 ```
 
-The Lambda calls the external APIs configured by `PRODUCTS_API_ONE_URL` and `PRODUCTS_API_TWO_URL`, compares product data by category, and writes the result to:
+The Lambda calls the external API configured by `PRODUCTS_API_URL`, filters products by category, and writes a category cache to:
 
 ```text
 s3://<EXTERNAL_API_BUCKET_NAME>/external-api-enrichment/
@@ -277,6 +277,20 @@ s3://<EXTERNAL_API_BUCKET_NAME>/external-api-enrichment/
 More details: [docs/external-api-enrichment.md](docs/external-api-enrichment.md)
 
 Static dashboard: [examples/external-api-enrichment-dashboard/README.md](examples/external-api-enrichment-dashboard/README.md)
+
+## View Live Crypto Prices
+
+After deployment, CloudFormation prints the public crypto prices Lambda Function URL as:
+
+```text
+CryptoPricesFunctionUrl
+```
+
+The Lambda reads Binance ticker prices for `BTCUSDT`, `ETHUSDT`, and `DOGEUSDT`, then shares a 10-second S3 cache across all clients.
+
+Static dashboard: [examples/crypto-prices-dashboard/README.md](examples/crypto-prices-dashboard/README.md)
+
+More details: [docs/crypto-prices.md](docs/crypto-prices.md)
 
 ## View Category Analytics
 
@@ -310,8 +324,10 @@ The analytics dashboard must read JSON to draw the charts. The analytics Lambda 
 
 - Example ventas table: [docs/example-ventas-table.md](docs/example-ventas-table.md)
 - Example category events table: [docs/example-category-events-table.md](docs/example-category-events-table.md)
-- External API comparison demo: [docs/external-api-enrichment.md](docs/external-api-enrichment.md)
-- External API comparison dashboard: [examples/external-api-enrichment-dashboard/README.md](examples/external-api-enrichment-dashboard/README.md)
+- External API product cache demo: [docs/external-api-enrichment.md](docs/external-api-enrichment.md)
+- External API product dashboard: [examples/external-api-enrichment-dashboard/README.md](examples/external-api-enrichment-dashboard/README.md)
+- Crypto prices demo: [docs/crypto-prices.md](docs/crypto-prices.md)
+- Crypto prices dashboard: [examples/crypto-prices-dashboard/README.md](examples/crypto-prices-dashboard/README.md)
 - CSV upload HTML demo: [examples/csv-upload-demo/README.md](examples/csv-upload-demo/README.md)
 - Category gallery event demo: [examples/category-gallery/README.md](examples/category-gallery/README.md)
 - Category analytics dashboard: [examples/category-analytics-dashboard/README.md](examples/category-analytics-dashboard/README.md)

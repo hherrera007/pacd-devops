@@ -1,6 +1,6 @@
-# External API Comparison
+# External API Product Cache
 
-This demo creates a public Lambda Function URL that calls two external product APIs with `requests`, compares the category-filtered responses, and stores the raw and comparison payload in S3.
+This demo creates a public Lambda Function URL that calls one external product API with `requests`, filters products by category, and caches the category result in S3.
 
 ## Resources
 
@@ -27,25 +27,27 @@ Open the static dashboard at:
 examples/external-api-enrichment-dashboard/index.html
 ```
 
-Paste the deployed `ExternalApiEnrichmentFunctionUrl`, select a category, and run the comparison. Each successful dashboard run writes one JSON file to S3.
+Paste the deployed `ExternalApiEnrichmentFunctionUrl`, select a category, and load products. The first request for a category writes one JSON cache file to S3; repeated requests for the same category read that S3 file instead of calling the API again.
 
 ## Storage
 
 The Lambda writes JSON files under:
 
 ```text
-s3://<EXTERNAL_API_BUCKET_NAME>/external-api-enrichment/
+s3://<EXTERNAL_API_BUCKET_NAME>/external-api-enrichment/category-cache/
 ```
 
 Each file includes:
 
 - selected category
-- source API URLs
-- source errors, warnings, and matching product counts
-- filtered raw API responses
-- product comparisons
+- source API URL
+- source error, if the API failed
+- product count
+- filtered products
 
-The comparison pairs products by list position after filtering each API by category. The two APIs do not share product IDs, so this is not a true product merge. If one API has no matching products, it is left empty instead of filling the response with unrelated fallback products.
+The cache key is based on the requested category, so a repeated category request returns the existing S3 object.
+
+The demo categories must match the category names returned by `PRODUCTS_API_URL`. The current dashboard uses real categories from `https://api.escuelajs.co/api/v1/products`, such as `Electronics`, `Shoes`, `Miscellaneous`, and `pet supplies`.
 
 ## Configuration
 
@@ -53,8 +55,7 @@ Set these values in `.env`:
 
 ```text
 EXTERNAL_API_BUCKET_NAME=<GLOBALLY_UNIQUE_EXTERNAL_API_BUCKET_NAME>
-PRODUCTS_API_ONE_URL=https://fakestoreapi.com/products
-PRODUCTS_API_TWO_URL=https://api.escuelajs.co/api/v1/products
+PRODUCTS_API_URL=https://api.escuelajs.co/api/v1/products
 ```
 
 S3 bucket names must be globally unique across all AWS accounts.

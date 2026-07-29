@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>External API Comparison Dashboard</title>
+  <title>External API Product Dashboard</title>
   <style>
     :root {
       color-scheme: light;
@@ -111,43 +111,15 @@
       color: var(--danger);
     }
 
-    .source-errors {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .source-error {
+    .source-message {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
+      margin-top: 14px;
       padding: 12px;
       color: var(--muted);
       font-size: 14px;
       overflow-wrap: anywhere;
-    }
-
-    .source-error strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--text);
-    }
-
-    .source-counts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .source-counts span {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--panel);
-      color: var(--muted);
-      font-size: 13px;
-      padding: 6px 10px;
     }
 
     .summary {
@@ -219,19 +191,9 @@
       font-size: 14px;
     }
 
-    .comparison {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0;
-    }
-
     .source {
       min-width: 0;
       padding: 14px;
-    }
-
-    .source + .source {
-      border-left: 1px solid var(--line);
     }
 
     .source h3 {
@@ -304,23 +266,18 @@
     @media (max-width: 760px) {
       .controls,
       .summary,
-      .comparison {
+      .summary {
         grid-template-columns: 1fr;
-      }
-
-      .source + .source {
-        border-top: 1px solid var(--line);
-        border-left: 0;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>External API Comparison Dashboard</h1>
-    <p>Calls the enrichment Lambda, compares category results from two public APIs, and stores the result in S3.</p>
+    <h1>External API Product Dashboard</h1>
+    <p>Calls one external products API by category and caches repeated category results in S3.</p>
 
-    <section class="controls" aria-label="Enrichment controls">
+    <section class="controls" aria-label="Product controls">
       <div>
         <label for="function-url">ExternalApiEnrichmentFunctionUrl</label>
         <input id="function-url" type="url" value="https://qaayfl6gvtfqc7dwxuwdc3nili0tzhfs.lambda-url.us-east-1.on.aws/" spellcheck="false">
@@ -330,32 +287,29 @@
         <label for="category">Category</label>
         <select id="category">
           <option>Electronics</option>
-          <option>Fashion</option>
-          <option>Home & Kitchen</option>
-          <option>Sports & Outdoors</option>
-          <option>Books</option>
-          <option>Toys & Games</option>
-          <option>Beauty & Personal Care</option>
-          <option>Pet Supplies</option>
+          <option>Shoes</option>
+          <option>Miscellaneous</option>
+          <option>pet supplies</option>
+          <option>Changed</option>
+          <option>Furniture12</option>
         </select>
       </div>
 
-      <button id="run-button" type="button">Run Comparison</button>
+      <button id="run-button" type="button">Load Products</button>
     </section>
 
     <p class="status" id="status" aria-live="polite">Ready.</p>
-    <div class="source-counts" id="source-counts" hidden></div>
-    <div class="source-errors" id="source-errors" hidden></div>
+    <div class="source-message" id="source-message" hidden></div>
   </header>
 
   <main>
-    <section class="summary" aria-label="Enrichment summary">
+    <section class="summary" aria-label="Product summary">
       <div class="metric">
         <span>Category</span>
         <strong id="summary-category">-</strong>
       </div>
       <div class="metric">
-        <span>Compared Products</span>
+        <span>Products</span>
         <strong id="summary-count">0</strong>
       </div>
       <div class="metric">
@@ -365,9 +319,9 @@
     </section>
 
     <section class="panel">
-      <h2>Product Comparison</h2>
+      <h2>Products</h2>
       <div id="products" class="product-grid">
-        <div class="empty">Run the comparison to see products from both APIs.</div>
+        <div class="empty">Load a category to see products.</div>
       </div>
     </section>
 
@@ -382,13 +336,13 @@
     const categorySelect = document.getElementById("category");
     const runButton = document.getElementById("run-button");
     const statusText = document.getElementById("status");
-    const sourceCounts = document.getElementById("source-counts");
-    const sourceErrors = document.getElementById("source-errors");
+    const sourceMessage = document.getElementById("source-message");
     const summaryCategory = document.getElementById("summary-category");
     const summaryCount = document.getElementById("summary-count");
     const summaryS3Key = document.getElementById("summary-s3-key");
     const productsContainer = document.getElementById("products");
     const rawResponse = document.getElementById("raw-response");
+    const defaultImageUrl = "https://placehold.co/600x400?text=No+Image";
 
     runButton.addEventListener("click", runEnrichment);
 
@@ -402,7 +356,7 @@
       }
 
       runButton.disabled = true;
-      setStatus("Calling external APIs and storing the comparison payload in S3...", "");
+      setStatus("Loading products or reading the S3 category cache...", "");
 
       try {
         const response = await fetch(functionUrl, {
@@ -417,11 +371,10 @@
         }
 
         renderSummary(data);
-        renderSourceCounts(data.source_counts || {});
-        renderSourceMessages(data.source_errors || {}, data.source_warnings || {});
-        renderProducts(data.comparisons || []);
+        renderSourceMessage(data);
+        renderProducts(data.products || []);
         rawResponse.textContent = JSON.stringify(data, null, 2);
-        setStatus(`Stored ${data.comparison_count || 0} comparison records in S3.`, "ok");
+        setStatus(`${data.cache_hit ? "Loaded from S3 cache" : "Stored new category cache"} with ${data.product_count || 0} products.`, "ok");
       } catch (error) {
         setStatus(error.message || "The enrichment request failed.", "error");
         console.warn("External API enrichment failed.", error);
@@ -430,45 +383,20 @@
       }
     }
 
-    function renderSourceCounts(counts) {
-      const entries = Object.entries(counts);
-
-      if (!entries.length) {
-        sourceCounts.hidden = true;
-        sourceCounts.innerHTML = "";
+    function renderSourceMessage(data) {
+      if (!data.source_error && data.product_count > 0) {
+        sourceMessage.hidden = false;
+        sourceMessage.textContent = `${data.cache_hit ? "Cache hit" : "Cache miss"} | Source: ${data.source_url}`;
         return;
       }
 
-      sourceCounts.hidden = false;
-      sourceCounts.innerHTML = entries.map(([source, count]) => `
-        <span>${escapeHtml(source)} matches: ${Number(count) || 0}</span>
-      `).join("");
-    }
-
-    function renderSourceMessages(errors, warnings) {
-      const entries = [
-        ...Object.entries(errors).filter(([, message]) => message),
-        ...Object.entries(warnings).filter(([, message]) => message),
-      ];
-
-      if (!entries.length) {
-        sourceErrors.hidden = true;
-        sourceErrors.innerHTML = "";
-        return;
-      }
-
-      sourceErrors.hidden = false;
-      sourceErrors.innerHTML = entries.map(([source, message]) => `
-        <div class="source-error">
-          <strong>${escapeHtml(source)}</strong>
-          ${escapeHtml(message)}
-        </div>
-      `).join("");
+      sourceMessage.hidden = false;
+      sourceMessage.textContent = data.source_error || "No products matched this category.";
     }
 
     function renderSummary(data) {
       summaryCategory.textContent = data.category || "-";
-      summaryCount.textContent = data.comparison_count ?? 0;
+      summaryCount.textContent = data.product_count ?? 0;
       summaryS3Key.textContent = data.s3_key || "-";
     }
 
@@ -485,13 +413,10 @@
         card.className = "product-card";
         card.innerHTML = `
           <header>
-            <strong>Comparison ${index + 1}</strong>
+            <strong>Product ${index + 1}</strong>
             <span>${escapeHtml(item.category || "")}</span>
           </header>
-          <div class="comparison">
-            ${renderSource("API One", item.api_one_product)}
-            ${renderSource("API Two", item.api_two_product)}
-          </div>
+          ${renderSource("API Product", item)}
         `;
         productsContainer.appendChild(card);
       });
@@ -528,14 +453,14 @@
       const encodedImages = encodeURIComponent(JSON.stringify(images));
 
       if (images.length === 1) {
-        return `<img src="${escapeAttribute(images[0])}" alt="${escapeAttribute(altText)}">`;
+        return `<img src="${escapeAttribute(images[0])}" alt="${escapeAttribute(altText)}" onerror="useDefaultImage(this)">`;
       }
 
       return `
         <div class="carousel" data-images="${encodedImages}" data-index="0">
-          <button type="button" aria-label="Previous image" onclick="changeImage(this, -1)">‹</button>
-          <img id="${imageId}" src="${escapeAttribute(images[0])}" alt="${escapeAttribute(altText)}">
-          <button type="button" aria-label="Next image" onclick="changeImage(this, 1)">›</button>
+          <button type="button" aria-label="Previous image" onclick="changeImage(this, -1)">&lsaquo;</button>
+          <img id="${imageId}" src="${escapeAttribute(images[0])}" alt="${escapeAttribute(altText)}" onerror="useDefaultImage(this)">
+          <button type="button" aria-label="Next image" onclick="changeImage(this, 1)">&rsaquo;</button>
         </div>
         <div id="${countId}" class="carousel-count">1 / ${images.length}</div>
       `;
@@ -551,6 +476,11 @@
       carousel.dataset.index = String(nextIndex);
       image.src = images[nextIndex];
       counter.textContent = `${nextIndex + 1} / ${images.length}`;
+    }
+
+    function useDefaultImage(image) {
+      image.onerror = null;
+      image.src = defaultImageUrl;
     }
 
     function imageList(value) {

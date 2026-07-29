@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crypto Prices Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5d667a;
+      --line: #e5e8ef;
+      --accent: #2563eb;
+      --success: #15803d;
+      --danger: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header,
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 24px 32px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    button {
+      min-height: 42px;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      padding: 9px 10px;
+    }
+
+    button {
+      border: 0;
+      background: var(--accent);
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 10px 16px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 14px;
+      align-items: end;
+      margin-top: 20px;
+    }
+
+    .status {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.ok {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .coin-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .coin-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .coin-header img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .coin-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .coin-header span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .price {
+      margin-bottom: 12px;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 240px !important;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Crypto Prices Dashboard</h1>
+    <p>Shows live Binance prices for Bitcoin, Ethereum, and Dogecoin. Line plots refresh every 10 seconds.</p>
+
+    <section class="controls" aria-label="Crypto price controls">
+      <div>
+        <label for="function-url">CryptoPricesFunctionUrl</label>
+        <input id="function-url" type="url" value="https://ogqhz5yocjtlg4p7r3tivfgizy0nmjzd.lambda-url.us-east-1.on.aws/" spellcheck="false">
+      </div>
+
+      <button id="refresh-button" type="button">Refresh Now</button>
+    </section>
+
+    <p class="status" id="status" aria-live="polite">Ready.</p>
+  </header>
+
+  <main>
+    <section class="grid" aria-label="Crypto price line plots">
+      <article class="coin-card">
+        <div class="coin-header">
+          <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin logo">
+          <div>
+            <h2>Bitcoin</h2>
+            <span>BTCUSDT</span>
+          </div>
+        </div>
+        <div class="price" id="BTC-price">-</div>
+        <canvas id="BTC-chart"></canvas>
+      </article>
+
+      <article class="coin-card">
+        <div class="coin-header">
+          <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum logo">
+          <div>
+            <h2>Ethereum</h2>
+            <span>ETHUSDT</span>
+          </div>
+        </div>
+        <div class="price" id="ETH-price">-</div>
+        <canvas id="ETH-chart"></canvas>
+      </article>
+
+      <article class="coin-card">
+        <div class="coin-header">
+          <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png" alt="Dogecoin logo">
+          <div>
+            <h2>Dogecoin</h2>
+            <span>DOGEUSDT</span>
+          </div>
+        </div>
+        <div class="price" id="DOGE-price">-</div>
+        <canvas id="DOGE-chart"></canvas>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const priceUrlInput = document.getElementById("function-url");
+    const refreshButton = document.getElementById("refresh-button");
+    const statusText = document.getElementById("status");
+    const coinConfig = {
+      BTC: { color: "#f7931a", decimals: 2 },
+      ETH: { color: "#627eea", decimals: 2 },
+      DOGE: { color: "#c2a633", decimals: 6 },
+    };
+    const history = { BTC: [], ETH: [], DOGE: [] };
+    const charts = {};
+    let refreshTimer;
+
+    createCharts();
+    refreshButton.addEventListener("click", updatePrices);
+    updatePrices();
+    refreshTimer = window.setInterval(updatePrices, 10000);
+
+    function createCharts() {
+      Object.entries(coinConfig).forEach(([symbol, config]) => {
+        charts[symbol] = new Chart(document.getElementById(`${symbol}-chart`), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [{
+              label: "Price USDT",
+              data: [],
+              borderColor: config.color,
+              backgroundColor: `${config.color}22`,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 7,
+              tension: 0.25,
+              fill: true,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `$${Number(context.raw).toLocaleString(undefined, {
+                    minimumFractionDigits: config.decimals,
+                    maximumFractionDigits: config.decimals,
+                  })}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { maxRotation: 0 },
+              },
+              y: {
+                beginAtZero: false,
+              },
+            },
+          },
+        });
+      });
+    }
+
+    async function updatePrices() {
+      const priceUrl = priceUrlInput.value.trim();
+
+      if (!priceUrl || priceUrl.includes("REPLACE_WITH")) {
+        setStatus("Replace the Function URL before starting live updates.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch(priceUrl);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "The crypto prices Lambda returned an error.");
+        }
+
+        updateCharts(data.prices || []);
+        setStatus(`${data.cache_hit ? "Loaded from S3 cache" : "Loaded fresh from Binance"} at ${new Date().toLocaleTimeString()}. Next refresh in 10 seconds.`, "ok");
+      } catch (error) {
+        setStatus(error.message || "Crypto prices could not be loaded.", "error");
+        console.warn("Crypto price refresh failed.", error);
+      }
+    }
+
+    function updateCharts(prices) {
+      prices.forEach((coin) => {
+        if (!coinConfig[coin.symbol] || coin.price === null) {
+          return;
+        }
+
+        const nowLabel = new Date().toLocaleTimeString();
+        history[coin.symbol].push({ label: nowLabel, price: Number(coin.price) });
+        history[coin.symbol] = history[coin.symbol].slice(-12);
+
+        document.getElementById(`${coin.symbol}-price`).textContent = formatPrice(coin.symbol, coin.price);
+
+        const chart = charts[coin.symbol];
+        chart.data.labels = history[coin.symbol].map((item) => item.label);
+        chart.data.datasets[0].data = history[coin.symbol].map((item) => item.price);
+        chart.update("none");
+      });
+    }
+
+    function formatPrice(symbol, price) {
+      const decimals = coinConfig[symbol].decimals;
+      return `$${Number(price).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      })}`;
+    }
+
+    function setStatus(message, type) {
+      statusText.textContent = message;
+      statusText.className = `status ${type}`.trim();
+    }
+  </script>
+</body>
+</html>

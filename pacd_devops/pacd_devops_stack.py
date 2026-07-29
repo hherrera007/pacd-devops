@@ -14,6 +14,7 @@ from pacd_devops.compute.csv_upload_url import CsvUploadUrl
 from pacd_devops.compute.s3_csv_mover import S3CsvMover
 from pacd_devops.constants import TAG_KEYS, MODULES
 from pacd_devops.database.pacd_postgres_database import PacdPostgresDatabase
+from pacd_devops.integrations.crypto_prices import CryptoPrices
 from pacd_devops.integrations.external_api_enrichment import ExternalApiEnrichment
 from pacd_devops.networking.pacd_vpc import PacdVpc
 from pacd_devops.storage.pacd_files_bucket import PacdFilesBucket
@@ -55,7 +56,7 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(csv_upload_url).add(TAG_KEYS.MODULE, MODULES.COMPUTE)
 
-        # Stores external API raw and comparison payloads.
+        # Stores external API category cache payloads.
         external_api_bucket = PacdFilesBucket(
             self,
             "ExternalApiBucket",
@@ -63,13 +64,21 @@ class PacdDevopsStack(Stack):
         )
         Tags.of(external_api_bucket).add(TAG_KEYS.MODULE, MODULES.STORAGE)
 
-        # Calls two external APIs, compares products, and stores the result in S3.
+        # Calls one external API and caches category results in S3.
         external_api_enrichment = ExternalApiEnrichment(
             self,
             "ExternalApiEnrichment",
             bucket=external_api_bucket.bucket,
         )
         Tags.of(external_api_enrichment).add(TAG_KEYS.MODULE, MODULES.INTEGRATION)
+
+        # Reads live crypto prices from Binance.
+        crypto_prices = CryptoPrices(
+            self,
+            "CryptoPrices",
+            bucket=external_api_bucket.bucket,
+        )
+        Tags.of(crypto_prices).add(TAG_KEYS.MODULE, MODULES.INTEGRATION)
 
         # Streams category click events to S3 through Firehose.
         category_events_stream = CategoryEventsStream(
@@ -154,5 +163,13 @@ class PacdDevopsStack(Stack):
             "ExternalApiEnrichmentFunctionUrl",
             # Prints the public external API enrichment URL after deployment.
             value=external_api_enrichment.function_url.url,
-            description="Public demo URL for comparing external product APIs and storing results in S3.",
+            description="Public demo URL for loading external products and caching category results in S3.",
+        )
+
+        CfnOutput(
+            self,
+            "CryptoPricesFunctionUrl",
+            # Prints the public crypto prices URL after deployment.
+            value=crypto_prices.function_url.url,
+            description="Public demo URL for reading Binance BTC, ETH, and DOGE prices.",
         )

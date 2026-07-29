@@ -4,7 +4,7 @@ from aws_cdk import BundlingOptions, DockerImage, Duration, RemovalPolicy, aws_i
 from constructs import Construct
 
 
-class ExternalApiEnrichment(Construct):
+class CryptoPrices(Construct):
     def __init__(
         self,
         scope: Construct,
@@ -16,21 +16,21 @@ class ExternalApiEnrichment(Construct):
 
         log_group = logs.LogGroup(
             self,
-            "ExternalApiEnrichmentLogGroup",
-            log_group_name="/aws/lambda/external-api-enrichment",
-            # Keeps demo enrichment logs short-lived.
+            "CryptoPricesLogGroup",
+            log_group_name="/aws/lambda/crypto-prices",
+            # Keeps demo price polling logs short-lived.
             retention=logs.RetentionDays.ONE_DAY,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
         self.function = lambda_.Function(
             self,
-            "ExternalApiEnrichmentFunction",
-            function_name="external-api-enrichment",
+            "CryptoPricesFunction",
+            function_name="crypto-prices",
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="app.handler",
             code=lambda_.Code.from_asset(
-                "lambda_functions/external_api_enrichment",
+                "lambda_functions/crypto_prices",
                 bundling=BundlingOptions(
                     # Packages requests with the Lambda asset.
                     image=DockerImage.from_registry("python:3.12-slim"),
@@ -41,25 +41,26 @@ class ExternalApiEnrichment(Construct):
                     ],
                 ),
             ),
-            timeout=Duration.seconds(20),
+            timeout=Duration.seconds(15),
             memory_size=128,
             log_group=log_group,
-            # No VPC here; the Lambda needs public internet for external APIs.
+            # No VPC; the Lambda needs public internet for Binance.
             environment={
+                "BINANCE_PRICE_URL": os.getenv("BINANCE_PRICE_URL", "https://data-api.binance.vision/api/v3/ticker/price"),
                 "BUCKET_NAME": bucket.bucket_name,
-                "OUTPUT_PREFIX": "external-api-enrichment/",
-                "PRODUCTS_API_URL": os.getenv("PRODUCTS_API_URL", "https://api.escuelajs.co/api/v1/products"),
+                "CACHE_KEY": "crypto-prices/latest.json",
+                "CACHE_TTL_SECONDS": "10",
             },
         )
 
-        # Lets the Lambda read cached categories and store new API payloads.
+        # Lets the Lambda share one 10-second price cache across all clients.
         bucket.grant_read_write(self.function)
 
         self.function_url = self.function.add_function_url(
             # Public demo endpoint; no AWS auth required.
             auth_type=lambda_.FunctionUrlAuthType.NONE,
             cors=lambda_.FunctionUrlCorsOptions(
-                allowed_methods=[lambda_.HttpMethod.POST],
+                allowed_methods=[lambda_.HttpMethod.GET],
                 allowed_origins=["*"],
                 allowed_headers=["content-type"],
             ),
@@ -67,13 +68,13 @@ class ExternalApiEnrichment(Construct):
 
         # Public permissions required for unauthenticated Function URL calls.
         self.function.add_permission(
-            "ExternalApiEnrichmentUrlInvokePermission",
+            "CryptoPricesUrlInvokePermission",
             principal=iam.AnyPrincipal(),
             action="lambda:InvokeFunctionUrl",
             function_url_auth_type=lambda_.FunctionUrlAuthType.NONE,
         )
         self.function.add_permission(
-            "ExternalApiEnrichmentFunctionInvokePermission",
+            "CryptoPricesFunctionInvokePermission",
             principal=iam.AnyPrincipal(),
             action="lambda:InvokeFunction",
         )
